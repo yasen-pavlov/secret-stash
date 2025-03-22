@@ -1,0 +1,11 @@
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/bitnet
+          jwk-set-uri: http://keycloak:8080/realms/bitnet/protocol/openid-connect/certs
+
+server:
+  error:
+    include-stacktrace: never

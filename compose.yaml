@@ -1,0 +1,25 @@
+services:
+  postgres:
+    container_name: "postgres_secret_stash"
+    image: 'postgres:17.4'
+    environment:
+      POSTGRES_DB: 'secret_stash'
+      POSTGRES_PASSWORD: 'secret'
+      POSTGRES_USER: 'stash'
+    ports:
+      - '5432:5432'
+  keycloak:
+    container_name: 'keycloak'
+    image: quay.io/keycloak/keycloak:26.1
+    command:
+      - start-dev
+      - --import-realm
+    environment:
+      KC_HOSTNAME: 'localhost'
+      KC_HTTP_ENABLED: true
+      KC_BOOTSTRAP_ADMIN_USERNAME: 'admin'
+      KC_BOOTSTRAP_ADMIN_PASSWORD: 'secret'
+    volumes:
+      - ./demo/realms:/opt/keycloak/data/import
+    ports:
+      - '8080:8080'
