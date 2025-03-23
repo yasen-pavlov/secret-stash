@@ -9,10 +9,18 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/bitnet
-          jwk-set-uri: http://localhost:8080/realms/bitnet/protocol/openid-connect/certs
+          issuer-uri: http://localhost:8080/realms/${keycloak.realm}
+          jwk-set-uri: http://localhost:8080/realms/${keycloak.realm}/protocol/openid-connect/certs
 
 server:
   port: 8081
-  error:
-    include-stacktrace: never
+
+springdoc:
+  swagger-ui:
+    path: /docs/swagger-ui.html
+  api-docs:
+    path: /docs/v3/api-docs
+
+keycloak:
+  auth-server-url: http://localhost:8080
+  realm: bitnet

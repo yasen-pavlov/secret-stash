@@ -162,7 +162,7 @@ class NoteRestControllerTest {
             .perform(
                 delete("/api/notes/$noteId")
                     .with(csrf()),
-            ).andExpect(status().isOk)
+            ).andExpect(status().isNoContent)
 
         // Assert
         val deletedNote = jpaNoteRepository.findById(noteId).orElse(null)

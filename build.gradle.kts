@@ -37,10 +37,14 @@ dependencies {
     implementation(libs.spring.boot.starter.validation)
     implementation(libs.spring.boot.starter.web)
     implementation(libs.spring.boot.starter.actuator)
+
+    // other dependencies
     implementation(libs.jackson.module.kotlin)
     implementation(libs.liquibase.core)
     implementation(libs.kotlin.logging)
+    implementation(libs.springdoc.webui)
 
+    // dev dependencies
     developmentOnly(libs.spring.boot.devtools)
     developmentOnly(libs.spring.boot.docker.compose)
 
@@ -48,16 +52,11 @@ dependencies {
 
     annotationProcessor(libs.spring.boot.configuration.processor)
 
-    // Test dependencies - Kotlin focused testing setup
-    testImplementation(libs.spring.boot.starter.test) {
-        exclude(module = "mockito-core")
-    }
+    // test dependencies
+    testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.kotlin.test.junit5)
-    testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.assertj.core)
-
-    // Spring test and infrastructure
     testImplementation(libs.spring.security.test)
     testImplementation(libs.spring.boot.testcontainers)
     testImplementation(libs.testcontainers.junit.jupiter)

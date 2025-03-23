@@ -16,24 +16,25 @@ import java.util.UUID
 @Entity
 @Table(name = "note")
 @EntityListeners(AuditingEntityListener::class)
+@Suppress("JpaDataSourceORMInspection")
 class Note(
-    @Id
-    @Column(name = "id")
+    @field:Id
+    @field:Column(name = "id")
     var id: NoteId,
-    @Column(name = "title")
+    @field:Column(name = "title")
     var title: String,
-    @Column(name = "content")
+    @field:Column(name = "content")
     var content: String,
-    @Column(name = "created_by")
+    @field:Column(name = "created_by")
     var createdBy: UserId,
-    @Column(name = "created_at")
-    @CreatedDate
+    @field:Column(name = "created_at")
+    @field:CreatedDate
     var createdAt: ZonedDateTime,
-    @Column(name = "updated_at")
-    @LastModifiedDate
+    @field:Column(name = "updated_at")
+    @field:LastModifiedDate
     var updatedAt: ZonedDateTime,
-    @Version
-    @Column(name = "version")
+    @field:Version
+    @field:Column(name = "version")
     var version: Long = 0L,
 ) {
     constructor(noteRequest: NoteRequest, userId: UserId) : this(
