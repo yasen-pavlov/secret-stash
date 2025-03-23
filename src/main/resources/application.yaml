@@ -24,3 +24,8 @@ springdoc:
 keycloak:
   auth-server-url: http://localhost:8080
   realm: bitnet
+
+rate:
+  limit:
+    default-limit: 10
+    window-seconds: 1

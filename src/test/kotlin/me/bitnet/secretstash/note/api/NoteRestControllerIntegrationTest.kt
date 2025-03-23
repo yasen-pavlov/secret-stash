@@ -1,22 +1,18 @@
 package me.bitnet.secretstash.note.api
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import me.bitnet.secretstash.note.domain.Note
 import me.bitnet.secretstash.note.domain.NoteId
 import me.bitnet.secretstash.note.dto.NoteRequest
-import me.bitnet.secretstash.note.infrastructure.JpaNoteRepository
+import me.bitnet.secretstash.util.BaseIntegrationTest
 import me.bitnet.secretstash.util.TestcontainersConfiguration
 import me.bitnet.secretstash.util.WithMockJwt
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
-import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
@@ -29,24 +25,7 @@ import java.util.UUID
 @Import(TestcontainersConfiguration::class)
 @SpringBootTest
 @AutoConfigureMockMvc
-class NoteRestControllerTest {
-    @Autowired
-    private lateinit var mockMvc: MockMvc
-
-    @Autowired
-    private lateinit var objectMapper: ObjectMapper
-
-    @Autowired
-    private lateinit var jpaNoteRepository: JpaNoteRepository
-
-    // User ID matching the one in WithMockJwt
-    private val testUserId = UUID.fromString("0c47a356-edb2-47ae-923c-9f2902c622be")
-
-    @AfterEach
-    fun cleanup() {
-        jpaNoteRepository.deleteAll()
-    }
-
+class NoteRestControllerIntegrationTest : BaseIntegrationTest() {
     @Test
     @WithMockJwt(roles = ["USER"])
     fun `should create a note when user has USER role`() {

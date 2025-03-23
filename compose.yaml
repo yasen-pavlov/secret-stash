@@ -23,3 +23,8 @@ services:
       - ./demo/realms:/opt/keycloak/data/import
     ports:
       - '8080:8080'
+  redis:
+    container_name: 'redis_secret_stash'
+    image: 'redis:7.4'
+    ports:
+      - '6379:6379'

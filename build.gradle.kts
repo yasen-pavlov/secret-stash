@@ -32,6 +32,7 @@ dependencies {
 
     // Spring Boot dependencies
     implementation(libs.spring.boot.starter.data.jpa)
+    implementation(libs.spring.boot.starter.data.redis)
     implementation(libs.spring.boot.starter.oauth2.resource.server)
     implementation(libs.spring.boot.starter.security)
     implementation(libs.spring.boot.starter.validation)
@@ -43,6 +44,8 @@ dependencies {
     implementation(libs.liquibase.core)
     implementation(libs.kotlin.logging)
     implementation(libs.springdoc.webui)
+    implementation(libs.resilience4j.ratelimiter)
+    implementation(libs.resilience4j.spring.boot3)
 
     // dev dependencies
     developmentOnly(libs.spring.boot.devtools)
@@ -61,6 +64,7 @@ dependencies {
     testImplementation(libs.spring.boot.testcontainers)
     testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.testcontainers.redis)
 
     testRuntimeOnly(libs.junit.platform.launcher)
 }

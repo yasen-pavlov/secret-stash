@@ -1,0 +1,24 @@
+{
+  "properties": [
+    {
+      "name": "keycloak.auth-server-url",
+      "type": "java.lang.String",
+      "description": "Keycloak public auth server url."
+    },
+    {
+      "name": "keycloak.realm",
+      "type": "java.lang.String",
+      "description": "Keycloak realm."
+    },
+    {
+      "name": "rate.limit.default-limit",
+      "type": "java.lang.String",
+      "description": "Set default number of requests per time window."
+    },
+    {
+      "name": "rate.limit.window-seconds",
+      "type": "java.lang.String",
+      "description": "Set size of time window."
+    }
+  ]
+}
