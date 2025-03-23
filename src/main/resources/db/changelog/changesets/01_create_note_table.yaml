@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: Yasen
+      changes:
+        - createTable:
+            tableName: note
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+              - column:
+                  name: title
+                  type: varchar(255)
+              - column:
+                  name: content
+                  type: text
+              - column:
+                  name: created_by
+                  type: uuid
+              - column:
+                  name: created_at
+                  type: timestamptz
+              - column:
+                  name: updated_at
+                  type: timestamptz
+              - column:
+                  name: version
+                  type: bigint
+                  # noinspection YAMLSchemaValidation
+                  defaultValue: 0
+      rollback:
+        - dropTable:
+            tableName: note

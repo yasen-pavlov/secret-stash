@@ -1,10 +1,10 @@
 plugins {
-    kotlin("jvm") version "1.9.25"
-    kotlin("plugin.spring") version "1.9.25"
-    id("org.springframework.boot") version "3.4.4"
-    id("io.spring.dependency-management") version "1.1.7"
-    kotlin("plugin.jpa") version "1.9.25"
-    id("org.jlleitschuh.gradle.ktlint") version "12.2.0"
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.spring.dependency.management)
+    alias(libs.plugins.kotlin.jpa)
+    alias(libs.plugins.ktlint)
 }
 
 group = "me.bitnet"
@@ -27,31 +27,50 @@ repositories {
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
-    implementation("org.springframework.boot:spring-boot-starter-security")
-    implementation("org.springframework.boot:spring-boot-starter-validation")
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("org.liquibase:liquibase-core")
-    developmentOnly("org.springframework.boot:spring-boot-devtools")
-    developmentOnly("org.springframework.boot:spring-boot-docker-compose")
-    runtimeOnly("org.postgresql:postgresql")
-    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.boot:spring-boot-testcontainers")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testImplementation("org.springframework.security:spring-security-test")
-    testImplementation("org.testcontainers:junit-jupiter")
-    testImplementation("org.testcontainers:postgresql")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    // Core dependencies
+    implementation(libs.kotlin.reflect)
+
+    // Spring Boot dependencies
+    implementation(libs.spring.boot.starter.data.jpa)
+    implementation(libs.spring.boot.starter.oauth2.resource.server)
+    implementation(libs.spring.boot.starter.security)
+    implementation(libs.spring.boot.starter.validation)
+    implementation(libs.spring.boot.starter.web)
+    implementation(libs.spring.boot.starter.actuator)
+    implementation(libs.jackson.module.kotlin)
+    implementation(libs.liquibase.core)
+    implementation(libs.kotlin.logging)
+
+    developmentOnly(libs.spring.boot.devtools)
+    developmentOnly(libs.spring.boot.docker.compose)
+
+    runtimeOnly(libs.postgresql)
+
+    annotationProcessor(libs.spring.boot.configuration.processor)
+
+    // Test dependencies - Kotlin focused testing setup
+    testImplementation(libs.spring.boot.starter.test) {
+        exclude(module = "mockito-core")
+    }
+    testImplementation(libs.kotlin.test.junit5)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.assertj.core)
+
+    // Spring test and infrastructure
+    testImplementation(libs.spring.security.test)
+    testImplementation(libs.spring.boot.testcontainers)
+    testImplementation(libs.testcontainers.junit.jupiter)
+    testImplementation(libs.testcontainers.postgresql)
+
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 kotlin {
+    jvmToolchain(21)
+
     compilerOptions {
-        freeCompilerArgs.addAll("-Xjsr305=strict")
+        freeCompilerArgs = listOf("-Xjsr305=strict")
     }
 }
 
@@ -61,8 +80,9 @@ allOpen {
     annotation("jakarta.persistence.Embeddable")
 }
 
-tasks.withType<Test> {
+tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+
     jvmArgs(
         "-javaagent:${classpath.find { it.name.contains("byte-buddy-agent") }?.absolutePath}",
         "-Xshare:off",
@@ -73,6 +93,6 @@ ktlint {
     version.set("1.5.0")
 }
 
-tasks.named("check") {
-    dependsOn("ktlintCheck")
+tasks.check {
+    dependsOn(tasks.ktlintCheck)
 }
