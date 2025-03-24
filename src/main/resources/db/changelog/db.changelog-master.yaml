@@ -1,3 +1,5 @@
 databaseChangeLog:
   - include:
       file: db/changelog/changesets/01_create_note_table.yaml
+  - include:
+      file: db/changelog/changesets/02_add_note_index.yaml

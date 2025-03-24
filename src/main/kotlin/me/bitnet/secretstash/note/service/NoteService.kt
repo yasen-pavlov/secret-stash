@@ -7,8 +7,11 @@ import me.bitnet.secretstash.note.domain.NoteId
 import me.bitnet.secretstash.note.domain.UserId
 import me.bitnet.secretstash.note.dto.NoteRequest
 import me.bitnet.secretstash.note.dto.NoteResponse
+import me.bitnet.secretstash.note.dto.PagedNoteResponse
 import me.bitnet.secretstash.note.infrastructure.NoteRepository
 import me.bitnet.secretstash.util.TokenService
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
@@ -21,6 +24,8 @@ class NoteService(
     private val tokenService: TokenService,
 ) {
     private val logger = KotlinLogging.logger {}
+    private val maxPageSize = 100
+    private val maxNotes = 1000
 
     @PreAuthorize("hasRole('USER')")
     fun createNote(noteRequest: NoteRequest): NoteResponse {
@@ -57,6 +62,36 @@ class NoteService(
         checkIfUserIdIsCurrentUser(note.createdBy)
         noteRepository.delete(note)
         return ResponseEntity.noContent().build()
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    fun getNotes(pageable: Pageable): PagedNoteResponse {
+        logger.info { "[getNotes] Getting notes, page: ${pageable.pageNumber}, size: ${pageable.pageSize}" }
+
+        val adjustedPageSize = minOf(pageable.pageSize, maxPageSize)
+        val maxPageNumber = (maxNotes - 1) / adjustedPageSize
+        val adjustedPageNumber = minOf(pageable.pageNumber, maxPageNumber)
+
+        val adjustedPageable =
+            PageRequest.of(
+                adjustedPageNumber,
+                adjustedPageSize,
+            )
+
+        val userId = tokenService.getCurrentUserId()
+        val notesPage =
+            noteRepository
+                .getNotesByUser(userId, adjustedPageable)
+                .map { NoteResponse(it) }
+
+        val totalElements = minOf(notesPage.totalElements, maxNotes.toLong())
+        val totalPages = (totalElements + adjustedPageSize - 1) / adjustedPageSize
+
+        return PagedNoteResponse(
+            notesPage,
+            totalElements,
+            totalPages.toInt(),
+        )
     }
 
     private fun checkIfUserIdIsCurrentUser(userId: UserId) {

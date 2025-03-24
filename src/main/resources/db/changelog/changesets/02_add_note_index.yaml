@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: Yasen
+      changes:
+        - createIndex:
+            indexName: idx_note_created_by_created_at
+            tableName: note
+            columns:
+              - column:
+                  name: created_by
+                  type: uuid
+              - column:
+                  name: created_at
+                  type: timestamptz
+            unique: false
+      rollback:
+        - dropIndex:
+            indexName: idx_note_created_by_created_at
+            tableName: note

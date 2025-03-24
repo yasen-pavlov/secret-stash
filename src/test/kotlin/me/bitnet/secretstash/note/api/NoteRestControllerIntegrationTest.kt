@@ -4,13 +4,9 @@ import me.bitnet.secretstash.note.domain.Note
 import me.bitnet.secretstash.note.domain.NoteId
 import me.bitnet.secretstash.note.dto.NoteRequest
 import me.bitnet.secretstash.util.BaseIntegrationTest
-import me.bitnet.secretstash.util.TestcontainersConfiguration
 import me.bitnet.secretstash.util.WithMockJwt
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
@@ -22,9 +18,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.time.ZonedDateTime
 import java.util.UUID
 
-@Import(TestcontainersConfiguration::class)
-@SpringBootTest
-@AutoConfigureMockMvc
 class NoteRestControllerIntegrationTest : BaseIntegrationTest() {
     @Test
     @WithMockJwt(roles = ["USER"])
@@ -84,6 +77,53 @@ class NoteRestControllerIntegrationTest : BaseIntegrationTest() {
             .andExpect(jsonPath("$.id").value(noteId.toString()))
             .andExpect(jsonPath("$.title").value(noteRequest.title))
             .andExpect(jsonPath("$.content").value(noteRequest.content))
+    }
+
+    @Test
+    @WithMockJwt(roles = ["USER"])
+    fun `should get paginated notes when user has USER role`() {
+        // Arrange
+        val numberOfNotes = 5
+        val noteIds = mutableListOf<NoteId>()
+
+        // Create test notes
+        for (i in 1..numberOfNotes) {
+            val noteRequest =
+                NoteRequest(
+                    title = "Test Note $i",
+                    content = "This is test note content $i",
+                )
+            noteIds.add(createTestNote(noteRequest))
+        }
+
+        // Act & Assert
+        // First page with size 3
+        mockMvc
+            .perform(
+                get("/api/notes?page=0&size=3&sort=createdAt,desc")
+                    .with(csrf()),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.content").isArray)
+            .andExpect(jsonPath("$.content.length()").value(3))
+            .andExpect(jsonPath("$.page").value(0))
+            .andExpect(jsonPath("$.size").value(3))
+            .andExpect(jsonPath("$.totalElements").isNumber)
+            .andExpect(jsonPath("$.totalPages").isNumber)
+            .andExpect(jsonPath("$.isFirst").value(true))
+            .andExpect(jsonPath("$.isLast").value(false))
+
+        // Second page with size 3 (should contain remaining 2 notes)
+        mockMvc
+            .perform(
+                get("/api/notes?page=1&size=3&sort=createdAt,desc")
+                    .with(csrf()),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.content").isArray)
+            .andExpect(jsonPath("$.content.length()").value(2))
+            .andExpect(jsonPath("$.page").value(1))
+            .andExpect(jsonPath("$.size").value(3))
+            .andExpect(jsonPath("$.isFirst").value(false))
+            .andExpect(jsonPath("$.isLast").value(true))
     }
 
     @Test
