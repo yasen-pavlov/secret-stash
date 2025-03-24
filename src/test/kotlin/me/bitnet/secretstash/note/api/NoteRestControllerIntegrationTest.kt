@@ -214,6 +214,29 @@ class NoteRestControllerIntegrationTest : BaseIntegrationTest() {
             ).andExpect(status().isForbidden)
     }
 
+    @Test
+    @WithMockJwt(roles = ["USER"])
+    fun `should return multiple validation errors when both title and content are invalid`() {
+        // Arrange
+        val invalidNoteRequest =
+            NoteRequest(
+                title = "",
+                content = "",
+            )
+
+        // Act & Assert
+        mockMvc
+            .perform(
+                post("/api/notes")
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(invalidNoteRequest)),
+            ).andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.errors.title").value("Title must be between 1 and 255 characters"))
+            .andExpect(jsonPath("$.errors.content").value("Content must be between 1 and 5000 characters"))
+    }
+
     /**
      * Helper method to create a test note directly via the repository
      */

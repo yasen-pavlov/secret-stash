@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.spring.dependency.management)
     alias(libs.plugins.kotlin.jpa)
     alias(libs.plugins.ktlint)
+    alias(libs.plugins.jacoco)
 }
 
 group = "me.bitnet"
@@ -98,4 +99,16 @@ ktlint {
 
 tasks.check {
     dependsOn(tasks.ktlintCheck)
+}
+
+jacoco {
+    toolVersion = libs.versions.jacoco.get()
+}
+
+tasks.test {
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
 }

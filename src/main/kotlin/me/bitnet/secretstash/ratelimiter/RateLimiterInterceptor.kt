@@ -35,8 +35,8 @@ class RateLimiterInterceptor(
         }
 
         // Get values from annotation
-        val annotationLimit = methodAnnotation?.value ?: classAnnotation?.value ?: 0
-        val annotationWindow = methodAnnotation?.windowSeconds ?: classAnnotation?.windowSeconds ?: 0
+        val annotationLimit = methodAnnotation?.value ?: classAnnotation.value
+        val annotationWindow = methodAnnotation?.windowSeconds ?: classAnnotation.windowSeconds
 
         // Use default values if values in annotation are not positive
         val limit = if (annotationLimit > 0) annotationLimit else defaultLimit

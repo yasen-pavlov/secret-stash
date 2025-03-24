@@ -5,6 +5,10 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: none
+  data:
+    redis:
+      repositories:
+        enabled: false
   security:
     oauth2:
       resourceserver:
@@ -20,6 +24,7 @@ springdoc:
     path: /docs/swagger-ui.html
   api-docs:
     path: /docs/v3/api-docs
+  default-produces-media-type: application/json
 
 keycloak:
   auth-server-url: http://localhost:8080

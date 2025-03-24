@@ -2,6 +2,7 @@ package me.bitnet.secretstash.note.api
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import me.bitnet.secretstash.note.domain.NoteId
@@ -53,7 +54,11 @@ interface NoteRestApi {
     ): NoteResponse
 
     @DeleteMapping("/{noteId}")
-    @Operation(summary = "Delete note", description = "Deletes a note by id")
+    @Operation(
+        summary = "Delete note",
+        description = "Deletes a note by id",
+        responses = [ApiResponse(responseCode = "204", description = "Note deleted")],
+    )
     fun deleteNote(
         @Parameter(description = "Note id", required = true)
         @PathVariable noteId: NoteId,
