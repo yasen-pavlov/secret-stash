@@ -1,10 +1,10 @@
 package me.bitnet.secretstash.config
 
-import me.bitnet.secretstash.exception.DomainEntityNotFoundException
+import me.bitnet.secretstash.note.exception.NoteNotFoundException
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
+import org.mockito.kotlin.whenever
 import org.springframework.http.HttpStatus
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.validation.BindingResult
@@ -19,10 +19,10 @@ class GlobalExceptionHandlerTest {
         // Arrange
         val fieldError = FieldError("testObject", "testField", "Test validation message")
         val bindingResult = mock(BindingResult::class.java)
-        `when`(bindingResult.fieldErrors).thenReturn(listOf(fieldError))
+        whenever(bindingResult.fieldErrors).thenReturn(listOf(fieldError))
 
         val exception = mock(MethodArgumentNotValidException::class.java)
-        `when`(exception.bindingResult).thenReturn(bindingResult)
+        whenever(exception.bindingResult).thenReturn(bindingResult)
 
         // Act
         val responseEntity = exceptionHandler.handleValidationExceptions(exception)
@@ -59,10 +59,10 @@ class GlobalExceptionHandlerTest {
     fun `test handleEntityNotFoundException returns exception message`() {
         // Arrange
         val errorMessage = "Entity with ID 123 not found"
-        val exception = DomainEntityNotFoundException(errorMessage)
+        val exception = NoteNotFoundException(errorMessage)
 
         // Act
-        val responseEntity = exceptionHandler.handleEntityNotFoundException(exception)
+        val responseEntity = exceptionHandler.handleNoteNotFoundException(exception)
 
         // Assert
         assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.NOT_FOUND)

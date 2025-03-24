@@ -1,9 +1,9 @@
 package me.bitnet.secretstash.note.infrastructure
 
-import me.bitnet.secretstash.exception.DomainEntityNotFoundException
 import me.bitnet.secretstash.note.domain.Note
 import me.bitnet.secretstash.note.domain.NoteId
 import me.bitnet.secretstash.note.domain.UserId
+import me.bitnet.secretstash.note.exception.NoteNotFoundException
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Repository
@@ -15,7 +15,7 @@ class NoteRepository(
     fun getById(noteId: NoteId): Note =
         jpaNoteRepository
             .findById(noteId)
-            .orElseThrow { DomainEntityNotFoundException("Note not found") }
+            .orElseThrow { NoteNotFoundException("Note not found") }
 
     fun save(note: Note): Note = jpaNoteRepository.save(note)
 

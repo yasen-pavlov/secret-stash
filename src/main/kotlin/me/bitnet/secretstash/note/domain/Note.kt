@@ -33,6 +33,8 @@ class Note(
     @field:Column(name = "updated_at")
     @field:LastModifiedDate
     var updatedAt: ZonedDateTime,
+    @field:Column(name = "expires_at")
+    var expiresAt: ZonedDateTime? = null,
     @field:Version
     @field:Column(name = "version")
     var version: Long = 0L,
@@ -44,11 +46,22 @@ class Note(
         createdBy = userId,
         createdAt = ZonedDateTime.now(),
         updatedAt = ZonedDateTime.now(),
+        expiresAt = calculateExpiresAt(noteRequest.ttlMinutes),
     )
 
     fun update(noteRequest: NoteRequest) {
         title = noteRequest.title
         content = noteRequest.content
+        expiresAt = calculateExpiresAt(noteRequest.ttlMinutes)
+    }
+
+    companion object {
+        private fun calculateExpiresAt(ttlMinutes: Int?): ZonedDateTime? =
+            if (ttlMinutes != null && ttlMinutes > 0) {
+                ZonedDateTime.now().plusMinutes(ttlMinutes.toLong())
+            } else {
+                null
+            }
     }
 }
 

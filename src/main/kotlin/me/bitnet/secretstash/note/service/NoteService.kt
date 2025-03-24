@@ -1,13 +1,13 @@
 package me.bitnet.secretstash.note.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import me.bitnet.secretstash.exception.DomainEntityNotFoundException
 import me.bitnet.secretstash.note.domain.Note
 import me.bitnet.secretstash.note.domain.NoteId
 import me.bitnet.secretstash.note.domain.UserId
 import me.bitnet.secretstash.note.dto.NoteRequest
 import me.bitnet.secretstash.note.dto.NoteResponse
 import me.bitnet.secretstash.note.dto.PagedNoteResponse
+import me.bitnet.secretstash.note.exception.NoteNotFoundException
 import me.bitnet.secretstash.note.infrastructure.NoteRepository
 import me.bitnet.secretstash.util.TokenService
 import org.springframework.data.domain.PageRequest
@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional
 class NoteService(
     private val noteRepository: NoteRepository,
     private val tokenService: TokenService,
+    private val noteExpirationService: NoteExpirationService,
 ) {
     private val logger = KotlinLogging.logger {}
     private val maxPageSize = 100
@@ -30,8 +31,14 @@ class NoteService(
     @PreAuthorize("hasRole('USER')")
     fun createNote(noteRequest: NoteRequest): NoteResponse {
         logger.info { "[createNote] Creating new note" }
-        val note = noteRepository.save(Note(noteRequest, tokenService.getCurrentUserId()))
-        return NoteResponse(note)
+        val note = Note(noteRequest, tokenService.getCurrentUserId())
+        val savedNote = noteRepository.save(note)
+
+        if (note.expiresAt != null) {
+            noteExpirationService.scheduleNoteDeletion(savedNote)
+        }
+
+        return NoteResponse(savedNote)
     }
 
     @PreAuthorize("hasRole('USER')")
@@ -50,7 +57,19 @@ class NoteService(
         logger.info { "[updateNote] Updating note with id: $id" }
         val note = noteRepository.getById(id)
         checkIfUserIdIsCurrentUser(note.createdBy)
+
+        val oldExpiresAt = note.expiresAt
+
         note.update(noteRequest)
+
+        if (oldExpiresAt != note.expiresAt) {
+            if (note.expiresAt == null) {
+                noteExpirationService.cancelScheduledDeletion(note.id)
+            } else {
+                noteExpirationService.scheduleNoteDeletion(note)
+            }
+        }
+
         return NoteResponse(note)
     }
 
@@ -60,6 +79,9 @@ class NoteService(
         logger.info { "[deleteNote] Deleting note with id: $id" }
         val note = noteRepository.getById(id)
         checkIfUserIdIsCurrentUser(note.createdBy)
+
+        noteExpirationService.cancelScheduledDeletion(id)
+
         noteRepository.delete(note)
         return ResponseEntity.noContent().build()
     }
@@ -98,7 +120,7 @@ class NoteService(
         if (tokenService.getCurrentUserId() != userId) {
             // throw not found here to prevent revealing that a note exists
             // if it's not owned by the currently logged-in user
-            throw DomainEntityNotFoundException("Note not found")
+            throw NoteNotFoundException("Note not found")
         }
     }
 }

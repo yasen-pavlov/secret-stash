@@ -86,7 +86,6 @@ class NoteRestControllerIntegrationTest : BaseIntegrationTest() {
         val numberOfNotes = 5
         val noteIds = mutableListOf<NoteId>()
 
-        // Create test notes
         for (i in 1..numberOfNotes) {
             val noteRequest =
                 NoteRequest(
@@ -193,7 +192,7 @@ class NoteRestControllerIntegrationTest : BaseIntegrationTest() {
         // Arrange
         val noteId = UUID.randomUUID()
 
-        // Act & Assert - use only GET to test unauthenticated access
+        // Act & Assert
         mockMvc
             .perform(
                 get("/api/notes/$noteId"),
@@ -206,7 +205,7 @@ class NoteRestControllerIntegrationTest : BaseIntegrationTest() {
         // Arrange
         val noteId = UUID.randomUUID()
 
-        // Act & Assert - use GET to test wrong role
+        // Act & Assert
         mockMvc
             .perform(
                 get("/api/notes/$noteId")
@@ -237,9 +236,6 @@ class NoteRestControllerIntegrationTest : BaseIntegrationTest() {
             .andExpect(jsonPath("$.errors.content").value("Content must be between 1 and 5000 characters"))
     }
 
-    /**
-     * Helper method to create a test note directly via the repository
-     */
     private fun createTestNote(noteRequest: NoteRequest): NoteId {
         val note =
             Note(

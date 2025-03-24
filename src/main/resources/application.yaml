@@ -15,6 +15,17 @@ spring:
         jwt:
           issuer-uri: http://localhost:8080/realms/${keycloak.realm}
           jwk-set-uri: http://localhost:8080/realms/${keycloak.realm}/protocol/openid-connect/certs
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: never
+    properties:
+      org.quartz.scheduler.instanceId: AUTO
+      org.quartz.scheduler.instanceName: secret-stash-scheduler
+      org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
+      org.quartz.jobStore.isClustered: true
+      org.quartz.jobStore.clusterCheckinInterval: 20000
+      org.quartz.threadPool.threadCount: 5
 
 server:
   port: 8081

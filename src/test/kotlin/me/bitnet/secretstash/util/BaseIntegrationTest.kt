@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import me.bitnet.secretstash.note.infrastructure.JpaNoteRepository
 import me.bitnet.secretstash.ratelimiter.RedisRateLimiterService
 import org.junit.jupiter.api.BeforeEach
+import org.quartz.Scheduler
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
@@ -26,6 +27,9 @@ abstract class BaseIntegrationTest {
 
     @Autowired
     protected lateinit var jpaNoteRepository: JpaNoteRepository
+
+    @Autowired
+    protected lateinit var scheduler: Scheduler
 
     // User ID matching the one in WithMockJwt
     protected val testUserId: UUID = UUID.fromString("0c47a356-edb2-47ae-923c-9f2902c622be")

@@ -3,3 +3,7 @@ databaseChangeLog:
       file: db/changelog/changesets/01_create_note_table.yaml
   - include:
       file: db/changelog/changesets/02_add_note_index.yaml
+  - include:
+      file: db/changelog/changesets/03_quartz_tables.yaml
+  - include:
+      file: db/changelog/changesets/04_add_expires_at_to_note.yaml

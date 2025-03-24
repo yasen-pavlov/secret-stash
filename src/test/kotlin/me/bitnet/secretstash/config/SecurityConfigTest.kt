@@ -4,8 +4,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.whenever
 import org.springframework.boot.test.system.OutputCaptureExtension
 import org.springframework.security.oauth2.jwt.Jwt
 
@@ -106,7 +106,7 @@ class SecurityConfigTest {
     fun `should handle type mismatch in realm_access itself`() {
         // Arrange
         val jwt = mock(Jwt::class.java)
-        `when`(jwt.claims).thenReturn(mapOf<String, Any>("realm_access" to "not-a-map"))
+        whenever(jwt.claims).thenReturn(mapOf<String, Any>("realm_access" to "not-a-map"))
         val converter = securityConfig.jwtAuthenticationConverter()
 
         // Act
@@ -126,13 +126,13 @@ class SecurityConfigTest {
                         "roles" to roles,
                     ),
             )
-        `when`(jwt.claims).thenReturn(claims)
+        whenever(jwt.claims).thenReturn(claims)
         return jwt
     }
 
     private fun createJwtWithoutRealmAccess(): Jwt {
         val jwt = mock(Jwt::class.java)
-        `when`(jwt.claims).thenReturn(emptyMap<String, Any>())
+        whenever(jwt.claims).thenReturn(emptyMap<String, Any>())
         return jwt
     }
 
@@ -145,7 +145,7 @@ class SecurityConfigTest {
                         "roles" to null,
                     ),
             )
-        `when`(jwt.claims).thenReturn(claims)
+        whenever(jwt.claims).thenReturn(claims)
         return jwt
     }
 
@@ -158,7 +158,7 @@ class SecurityConfigTest {
                         "roles" to "not-a-list",
                     ),
             )
-        `when`(jwt.claims).thenReturn(claims)
+        whenever(jwt.claims).thenReturn(claims)
         return jwt
     }
 }

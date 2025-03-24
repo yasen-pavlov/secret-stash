@@ -17,6 +17,15 @@ data class NoteResponse(
     val createdAt: ZonedDateTime,
     @Schema(description = "Modification date")
     val updatedAt: ZonedDateTime,
+    @Schema(description = "Timestamp when the note will expire (null if no expiration is set)")
+    val expiresAt: ZonedDateTime?,
 ) {
-    constructor(note: Note) : this(note.id, note.title, note.content, note.createdAt, note.updatedAt)
+    constructor(note: Note) : this(
+        note.id,
+        note.title,
+        note.content,
+        note.createdAt,
+        note.updatedAt,
+        note.expiresAt,
+    )
 }

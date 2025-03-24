@@ -24,7 +24,7 @@ class RedisRateLimiterService(
         val key = "rate_limit:$userId:${System.currentTimeMillis() / (windowSeconds * 1000)}"
         val count = redisTemplate.opsForValue().increment(key, 1) ?: 1
 
-        // Set expiry if key is new
+        // Set expiration if key is new
         if (count == 1L) {
             redisTemplate.expire(key, windowSeconds.toLong(), TimeUnit.SECONDS)
         }

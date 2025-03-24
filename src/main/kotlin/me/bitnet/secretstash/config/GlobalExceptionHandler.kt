@@ -1,7 +1,7 @@
 package me.bitnet.secretstash.config
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import me.bitnet.secretstash.exception.DomainEntityNotFoundException
+import me.bitnet.secretstash.note.exception.NoteNotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -49,8 +49,8 @@ class GlobalExceptionHandler {
         return ResponseEntity(response, HttpStatus.BAD_REQUEST)
     }
 
-    @ExceptionHandler(DomainEntityNotFoundException::class)
-    fun handleEntityNotFoundException(ex: DomainEntityNotFoundException): ResponseEntity<Map<String, Any>> {
+    @ExceptionHandler(NoteNotFoundException::class)
+    fun handleNoteNotFoundException(ex: NoteNotFoundException): ResponseEntity<Map<String, Any>> {
         // Log at INFO level since this is an expected application state, not an error
         logger.info { "Entity not found: $ex.message" }
 

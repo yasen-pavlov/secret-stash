@@ -14,8 +14,8 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
-import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.whenever
 import org.springframework.web.method.HandlerMethod
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -44,7 +44,7 @@ class RateLimiterInterceptorTest {
 
     private lateinit var interceptor: RateLimiterInterceptor
 
-    private val testUserId = UUID.fromString("00000000-0000-0000-0000-000000012345")
+    private val testUserId = UUID.randomUUID()
     private val testUserIdStr = testUserId.toString()
 
     @BeforeEach
@@ -72,9 +72,9 @@ class RateLimiterInterceptorTest {
     fun `should pass through if no RateLimit annotation is present`() {
         // Arrange
         val method = mock(Method::class.java)
-        `when`(handlerMethod.method).thenReturn(method)
-        `when`(handlerMethod.beanType).thenReturn(Any::class.java)
-        `when`(method.getAnnotation(RateLimit::class.java)).thenReturn(null)
+        whenever(handlerMethod.method).thenReturn(method)
+        whenever(handlerMethod.beanType).thenReturn(Any::class.java)
+        whenever(method.getAnnotation(RateLimit::class.java)).thenReturn(null)
 
         // Act
         val result = interceptor.preHandle(request, response, handlerMethod)
@@ -90,13 +90,13 @@ class RateLimiterInterceptorTest {
         val method = mock(Method::class.java)
         val methodAnnotation = mock(RateLimit::class.java)
 
-        `when`(handlerMethod.method).thenReturn(method)
-        `when`(handlerMethod.beanType).thenReturn(Any::class.java)
-        `when`(method.getAnnotation(RateLimit::class.java)).thenReturn(methodAnnotation)
-        `when`(methodAnnotation.value).thenReturn(0)
-        `when`(methodAnnotation.windowSeconds).thenReturn(0)
-        `when`(tokenService.getCurrentUserId()).thenReturn(testUserId)
-        `when`(rateLimiterService.isAllowed(testUserIdStr, 10, 1)).thenReturn(true)
+        whenever(handlerMethod.method).thenReturn(method)
+        whenever(handlerMethod.beanType).thenReturn(Any::class.java)
+        whenever(method.getAnnotation(RateLimit::class.java)).thenReturn(methodAnnotation)
+        whenever(methodAnnotation.value).thenReturn(0)
+        whenever(methodAnnotation.windowSeconds).thenReturn(0)
+        whenever(tokenService.getCurrentUserId()).thenReturn(testUserId)
+        whenever(rateLimiterService.isAllowed(testUserIdStr, 10, 1)).thenReturn(true)
 
         // Act
         val result = interceptor.preHandle(request, response, handlerMethod)
@@ -112,13 +112,13 @@ class RateLimiterInterceptorTest {
         val method = mock(Method::class.java)
         val methodAnnotation = mock(RateLimit::class.java)
 
-        `when`(handlerMethod.method).thenReturn(method)
-        `when`(handlerMethod.beanType).thenReturn(Any::class.java)
-        `when`(method.getAnnotation(RateLimit::class.java)).thenReturn(methodAnnotation)
-        `when`(methodAnnotation.value).thenReturn(20)
-        `when`(methodAnnotation.windowSeconds).thenReturn(5)
-        `when`(tokenService.getCurrentUserId()).thenReturn(testUserId)
-        `when`(rateLimiterService.isAllowed(testUserIdStr, 20, 5)).thenReturn(true)
+        whenever(handlerMethod.method).thenReturn(method)
+        whenever(handlerMethod.beanType).thenReturn(Any::class.java)
+        whenever(method.getAnnotation(RateLimit::class.java)).thenReturn(methodAnnotation)
+        whenever(methodAnnotation.value).thenReturn(20)
+        whenever(methodAnnotation.windowSeconds).thenReturn(5)
+        whenever(tokenService.getCurrentUserId()).thenReturn(testUserId)
+        whenever(rateLimiterService.isAllowed(testUserIdStr, 20, 5)).thenReturn(true)
 
         // Act
         val result = interceptor.preHandle(request, response, handlerMethod)
@@ -134,11 +134,11 @@ class RateLimiterInterceptorTest {
         val method = mock(Method::class.java)
         val beanType = TestControllerWithAnnotation::class.java
 
-        `when`(handlerMethod.method).thenReturn(method)
-        `when`(handlerMethod.beanType).thenReturn(beanType)
-        `when`(method.getAnnotation(RateLimit::class.java)).thenReturn(null)
-        `when`(tokenService.getCurrentUserId()).thenReturn(testUserId)
-        `when`(rateLimiterService.isAllowed(testUserIdStr, 15, 3)).thenReturn(true)
+        whenever(handlerMethod.method).thenReturn(method)
+        whenever(handlerMethod.beanType).thenReturn(beanType)
+        whenever(method.getAnnotation(RateLimit::class.java)).thenReturn(null)
+        whenever(tokenService.getCurrentUserId()).thenReturn(testUserId)
+        whenever(rateLimiterService.isAllowed(testUserIdStr, 15, 3)).thenReturn(true)
 
         // Act
         val result = interceptor.preHandle(request, response, handlerMethod)
@@ -156,14 +156,14 @@ class RateLimiterInterceptorTest {
         val responseWriter = StringWriter()
         val printWriter = PrintWriter(responseWriter)
 
-        `when`(handlerMethod.method).thenReturn(method)
-        `when`(handlerMethod.beanType).thenReturn(Any::class.java)
-        `when`(method.getAnnotation(RateLimit::class.java)).thenReturn(methodAnnotation)
-        `when`(methodAnnotation.value).thenReturn(5)
-        `when`(methodAnnotation.windowSeconds).thenReturn(2)
-        `when`(tokenService.getCurrentUserId()).thenReturn(testUserId)
-        `when`(rateLimiterService.isAllowed(testUserIdStr, 5, 2)).thenReturn(false)
-        `when`(response.writer).thenReturn(printWriter)
+        whenever(handlerMethod.method).thenReturn(method)
+        whenever(handlerMethod.beanType).thenReturn(Any::class.java)
+        whenever(method.getAnnotation(RateLimit::class.java)).thenReturn(methodAnnotation)
+        whenever(methodAnnotation.value).thenReturn(5)
+        whenever(methodAnnotation.windowSeconds).thenReturn(2)
+        whenever(tokenService.getCurrentUserId()).thenReturn(testUserId)
+        whenever(rateLimiterService.isAllowed(testUserIdStr, 5, 2)).thenReturn(false)
+        whenever(response.writer).thenReturn(printWriter)
 
         // Act
         val result = interceptor.preHandle(request, response, handlerMethod)
@@ -181,12 +181,12 @@ class RateLimiterInterceptorTest {
         val method = mock(Method::class.java)
         val methodAnnotation = mock(RateLimit::class.java)
 
-        `when`(handlerMethod.method).thenReturn(method)
-        `when`(handlerMethod.beanType).thenReturn(Any::class.java)
-        `when`(method.getAnnotation(RateLimit::class.java)).thenReturn(methodAnnotation)
-        `when`(methodAnnotation.value).thenReturn(5)
-        `when`(methodAnnotation.windowSeconds).thenReturn(2)
-        `when`(tokenService.getCurrentUserId()).thenThrow(RuntimeException("User not authenticated"))
+        whenever(handlerMethod.method).thenReturn(method)
+        whenever(handlerMethod.beanType).thenReturn(Any::class.java)
+        whenever(method.getAnnotation(RateLimit::class.java)).thenReturn(methodAnnotation)
+        whenever(methodAnnotation.value).thenReturn(5)
+        whenever(methodAnnotation.windowSeconds).thenReturn(2)
+        whenever(tokenService.getCurrentUserId()).thenThrow(RuntimeException("User not authenticated"))
 
         // Act
         val result = interceptor.preHandle(request, response, handlerMethod)

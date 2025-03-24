@@ -1,8 +1,8 @@
 package me.bitnet.secretstash.note.service
 
-import me.bitnet.secretstash.exception.DomainEntityNotFoundException
 import me.bitnet.secretstash.note.domain.Note
 import me.bitnet.secretstash.note.dto.NoteRequest
+import me.bitnet.secretstash.note.exception.NoteNotFoundException
 import me.bitnet.secretstash.note.infrastructure.NoteRepository
 import me.bitnet.secretstash.util.TokenService
 import org.assertj.core.api.Assertions.assertThat
@@ -11,8 +11,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.whenever
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import java.time.ZonedDateTime
@@ -26,6 +26,9 @@ class NoteServiceTest {
     @Mock
     private lateinit var tokenService: TokenService
 
+    @Mock
+    private lateinit var noteExpirationService: NoteExpirationService
+
     @InjectMocks
     private lateinit var noteService: NoteService
 
@@ -37,13 +40,13 @@ class NoteServiceTest {
     fun `should throw exception when getting note with different user id`() {
         // Arrange
         val note = createTestNote(ownerId)
-        `when`(noteRepository.getById(noteId)).thenReturn(note)
-        `when`(tokenService.getCurrentUserId()).thenReturn(differentUserId)
+        whenever(noteRepository.getById(noteId)).thenReturn(note)
+        whenever(tokenService.getCurrentUserId()).thenReturn(differentUserId)
 
         // Act & Assert
         assertThatThrownBy {
             noteService.getNote(noteId)
-        }.isInstanceOf(DomainEntityNotFoundException::class.java)
+        }.isInstanceOf(NoteNotFoundException::class.java)
             .hasMessage("Note not found")
     }
 
@@ -53,13 +56,13 @@ class NoteServiceTest {
         val note = createTestNote(ownerId)
         val updateRequest = NoteRequest("Updated Title", "Updated Content")
 
-        `when`(noteRepository.getById(noteId)).thenReturn(note)
-        `when`(tokenService.getCurrentUserId()).thenReturn(differentUserId)
+        whenever(noteRepository.getById(noteId)).thenReturn(note)
+        whenever(tokenService.getCurrentUserId()).thenReturn(differentUserId)
 
         // Act & Assert
         assertThatThrownBy {
             noteService.updateNote(noteId, updateRequest)
-        }.isInstanceOf(DomainEntityNotFoundException::class.java)
+        }.isInstanceOf(NoteNotFoundException::class.java)
             .hasMessage("Note not found")
     }
 
@@ -68,13 +71,13 @@ class NoteServiceTest {
         // Arrange
         val note = createTestNote(ownerId)
 
-        `when`(noteRepository.getById(noteId)).thenReturn(note)
-        `when`(tokenService.getCurrentUserId()).thenReturn(differentUserId)
+        whenever(noteRepository.getById(noteId)).thenReturn(note)
+        whenever(tokenService.getCurrentUserId()).thenReturn(differentUserId)
 
         // Act & Assert
         assertThatThrownBy {
             noteService.deleteNote(noteId)
-        }.isInstanceOf(DomainEntityNotFoundException::class.java)
+        }.isInstanceOf(NoteNotFoundException::class.java)
             .hasMessage("Note not found")
     }
 
@@ -87,8 +90,8 @@ class NoteServiceTest {
         val notes = createTestNotes(pageSize)
         val notesPage = PageImpl(notes, pageable, pageSize.toLong())
 
-        `when`(tokenService.getCurrentUserId()).thenReturn(ownerId)
-        `when`(noteRepository.getNotesByUser(ownerId, pageable)).thenReturn(notesPage)
+        whenever(tokenService.getCurrentUserId()).thenReturn(ownerId)
+        whenever(noteRepository.getNotesByUser(ownerId, pageable)).thenReturn(notesPage)
 
         // Act
         val result = noteService.getNotes(pageable)
@@ -114,8 +117,8 @@ class NoteServiceTest {
         val notes = createTestNotes(maxPageSize)
         val notesPage = PageImpl(notes, adjustedPageable, 150L)
 
-        `when`(tokenService.getCurrentUserId()).thenReturn(ownerId)
-        `when`(noteRepository.getNotesByUser(ownerId, adjustedPageable)).thenReturn(notesPage)
+        whenever(tokenService.getCurrentUserId()).thenReturn(ownerId)
+        whenever(noteRepository.getNotesByUser(ownerId, adjustedPageable)).thenReturn(notesPage)
 
         // Act
         val result = noteService.getNotes(requestedPageable)
@@ -138,8 +141,8 @@ class NoteServiceTest {
         val emptyList = listOf<Note>()
         val notesPage = PageImpl(emptyList, PageRequest.of(0, pageSize), totalNotes)
 
-        `when`(tokenService.getCurrentUserId()).thenReturn(ownerId)
-        `when`(noteRepository.getNotesByUser(ownerId, requestedPageable)).thenReturn(notesPage)
+        whenever(tokenService.getCurrentUserId()).thenReturn(ownerId)
+        whenever(noteRepository.getNotesByUser(ownerId, requestedPageable)).thenReturn(notesPage)
 
         // Act
         val result = noteService.getNotes(requestedPageable)
@@ -161,8 +164,8 @@ class NoteServiceTest {
         val notes = createTestNotes(pageSize)
         val notesPage = PageImpl(notes, pageable, totalNotes)
 
-        `when`(tokenService.getCurrentUserId()).thenReturn(ownerId)
-        `when`(noteRepository.getNotesByUser(ownerId, pageable)).thenReturn(notesPage)
+        whenever(tokenService.getCurrentUserId()).thenReturn(ownerId)
+        whenever(noteRepository.getNotesByUser(ownerId, pageable)).thenReturn(notesPage)
 
         // Act
         val result = noteService.getNotes(pageable)

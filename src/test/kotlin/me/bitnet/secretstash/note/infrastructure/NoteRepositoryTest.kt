@@ -1,13 +1,13 @@
 package me.bitnet.secretstash.note.infrastructure
 
-import me.bitnet.secretstash.exception.DomainEntityNotFoundException
+import me.bitnet.secretstash.note.exception.NoteNotFoundException
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.whenever
 import java.util.Optional
 import java.util.UUID
 
@@ -20,15 +20,15 @@ class NoteRepositoryTest {
     private lateinit var noteRepository: NoteRepository
 
     @Test
-    fun `should throw DomainEntityNotFoundException when note not found`() {
+    fun `should throw NoteNoteFoundException when note not found`() {
         // Arrange
         val noteId = UUID.randomUUID()
-        `when`(jpaNoteRepository.findById(noteId)).thenReturn(Optional.empty())
+        whenever(jpaNoteRepository.findById(noteId)).thenReturn(Optional.empty())
 
         // Act & Assert
         assertThatThrownBy {
             noteRepository.getById(noteId)
-        }.isInstanceOf(DomainEntityNotFoundException::class.java)
+        }.isInstanceOf(NoteNotFoundException::class.java)
             .hasMessage("Note not found")
     }
 }
