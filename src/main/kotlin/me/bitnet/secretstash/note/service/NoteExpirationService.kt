@@ -12,6 +12,7 @@ import org.quartz.SimpleScheduleBuilder
 import org.quartz.TriggerBuilder
 import org.springframework.stereotype.Service
 import java.time.Duration
+import java.time.ZoneOffset.UTC
 import java.time.ZonedDateTime
 import java.util.Date
 
@@ -29,7 +30,7 @@ class NoteExpirationService(
         }
 
         try {
-            val now = ZonedDateTime.now()
+            val now = ZonedDateTime.now(UTC)
             val expiresAt = note.expiresAt
 
             if (expiresAt?.isBefore(now) == true) {

@@ -7,7 +7,6 @@ import me.bitnet.secretstash.note.dto.PagedNoteHistoryResponse
 import me.bitnet.secretstash.note.dto.PagedNoteResponse
 import me.bitnet.secretstash.note.service.NoteService
 import me.bitnet.secretstash.ratelimiter.RateLimit
-import org.springframework.data.domain.Pageable
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -17,7 +16,18 @@ class NoteRestController(
 ) : NoteRestApi {
     override fun createNote(noteRequest: NoteRequest): NoteResponse = noteService.createNote(noteRequest)
 
+    override fun getNotes(
+        page: Int,
+        size: Int,
+    ): PagedNoteResponse = noteService.getNotes(page, size)
+
     override fun getNote(noteId: NoteId): NoteResponse = noteService.getNote(noteId)
+
+    override fun getNoteHistory(
+        noteId: NoteId,
+        page: Int,
+        size: Int,
+    ): PagedNoteHistoryResponse = noteService.getNoteHistory(noteId, page, size)
 
     override fun updateNote(
         noteId: NoteId,
@@ -25,11 +35,4 @@ class NoteRestController(
     ): NoteResponse = noteService.updateNote(noteId, noteRequest)
 
     override fun deleteNote(noteId: NoteId) = noteService.deleteNote(noteId)
-
-    override fun getNotes(pageable: Pageable): PagedNoteResponse = noteService.getNotes(pageable)
-
-    override fun getNoteHistory(
-        noteId: NoteId,
-        pageable: Pageable,
-    ): PagedNoteHistoryResponse = noteService.getNoteHistory(noteId, pageable)
 }

@@ -6,8 +6,11 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
+import org.springframework.web.bind.MissingPathVariableException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
+import java.util.UUID
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -30,6 +33,41 @@ class GlobalExceptionHandler {
             mapOf(
                 "status" to HttpStatus.BAD_REQUEST.value(),
                 "errors" to errors,
+            )
+
+        return ResponseEntity(response, HttpStatus.BAD_REQUEST)
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException::class)
+    fun handleTypeMismatchException(ex: MethodArgumentTypeMismatchException): ResponseEntity<Map<String, Any>> {
+        val errorMessage =
+            if (ex.requiredType != null && ex.requiredType == UUID::class.java) {
+                "Invalid UUID format for parameter '${ex.name}'"
+            } else {
+                "Invalid parameter value: '${ex.name}' must be of type ${ex.requiredType?.simpleName ?: "unknown"}"
+            }
+
+        // Log at DEBUG level as this is a client error
+        logger.debug { "Type mismatch for parameter ${ex.name}: ${ex.message}" }
+
+        val response =
+            mapOf(
+                "status" to HttpStatus.BAD_REQUEST.value(),
+                "errors" to mapOf("message" to errorMessage),
+            )
+
+        return ResponseEntity(response, HttpStatus.BAD_REQUEST)
+    }
+
+    @ExceptionHandler(MissingPathVariableException::class)
+    fun handleMissingPathVariableException(ex: MissingPathVariableException): ResponseEntity<Map<String, Any>> {
+        // Log at DEBUG level since this is a client error
+        logger.debug { "Missing path variable: ${ex.variableName}" }
+
+        val response =
+            mapOf(
+                "status" to HttpStatus.BAD_REQUEST.value(),
+                "errors" to mapOf("message" to "Missing required path variable: '${ex.variableName}'"),
             )
 
         return ResponseEntity(response, HttpStatus.BAD_REQUEST)

@@ -16,7 +16,6 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import org.quartz.JobDataMap
 import org.quartz.JobExecutionContext
-import java.time.ZonedDateTime
 import java.util.UUID
 
 @ExtendWith(MockitoExtension::class)
@@ -31,7 +30,7 @@ class NoteExpirationJobTest {
     private lateinit var jobDataMap: JobDataMap
 
     @InjectMocks
-    private lateinit var noteExpirationJob: TestableNoteExpirationJob
+    private lateinit var noteExpirationJob: NoteExpirationJob
 
     private val noteId = UUID.randomUUID()
     private val userId = UUID.randomUUID()
@@ -45,8 +44,6 @@ class NoteExpirationJobTest {
                 title = "Test Note",
                 content = "Test Content",
                 createdBy = userId,
-                createdAt = ZonedDateTime.now(),
-                updatedAt = ZonedDateTime.now(),
             )
 
         whenever(context.mergedJobDataMap).thenReturn(jobDataMap)
@@ -59,7 +56,7 @@ class NoteExpirationJobTest {
         whenever(noteRepository.getById(noteId)).thenReturn(note)
 
         // Act
-        noteExpirationJob.executeInternalForTest(context)
+        noteExpirationJob.execute(context)
 
         // Assert
         verify(noteRepository).getById(noteId)
@@ -73,7 +70,7 @@ class NoteExpirationJobTest {
         whenever(noteRepository.getById(noteId)).thenThrow(NoteNotFoundException("Note not found"))
 
         // Act - should not throw
-        noteExpirationJob.executeInternalForTest(context)
+        noteExpirationJob.execute(context)
 
         // Assert
         verify(noteRepository).getById(noteId)
@@ -86,7 +83,7 @@ class NoteExpirationJobTest {
         whenever(jobDataMap.getString(NoteExpirationJob.NOTE_ID_KEY)).thenReturn("not-a-uuid")
 
         // Act
-        noteExpirationJob.executeInternalForTest(context)
+        noteExpirationJob.execute(context)
 
         // Assert
         verify(noteRepository, never()).getById(any())
@@ -99,7 +96,7 @@ class NoteExpirationJobTest {
         whenever(jobDataMap.getString(NoteExpirationJob.NOTE_ID_KEY)).thenReturn(null)
 
         // Act
-        noteExpirationJob.executeInternalForTest(context)
+        noteExpirationJob.execute(context)
 
         // Assert
         verify(noteRepository, never()).getById(any())
@@ -114,19 +111,10 @@ class NoteExpirationJobTest {
         doThrow(RuntimeException("Database error")).whenever(noteRepository).delete(note)
 
         // Act
-        noteExpirationJob.executeInternalForTest(context)
+        noteExpirationJob.execute(context)
 
         // Assert
         verify(noteRepository).getById(noteId)
         verify(noteRepository).delete(note)
-    }
-
-    class TestableNoteExpirationJob(
-        noteRepository: NoteRepository,
-    ) : NoteExpirationJob(noteRepository) {
-        @Suppress("SpringTransactionalMethodCallsInspection")
-        fun executeInternalForTest(context: JobExecutionContext) {
-            executeInternal(context)
-        }
     }
 }

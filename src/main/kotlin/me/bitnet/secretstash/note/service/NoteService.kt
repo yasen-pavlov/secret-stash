@@ -14,7 +14,6 @@ import me.bitnet.secretstash.note.infrastructure.NoteHistoryRepository
 import me.bitnet.secretstash.note.infrastructure.NoteRepository
 import me.bitnet.secretstash.util.TokenService
 import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
@@ -29,7 +28,6 @@ class NoteService(
     private val noteExpirationService: NoteExpirationService,
 ) {
     private val logger = KotlinLogging.logger {}
-    private val maxPageSize = 100
     private val maxNotes = 1000
 
     @PreAuthorize("hasRole('USER')")
@@ -46,11 +44,60 @@ class NoteService(
     }
 
     @PreAuthorize("hasRole('USER')")
+    fun getNotes(
+        page: Int,
+        size: Int,
+    ): PagedNoteResponse {
+        logger.info { "[getNotes] Getting notes, page: $page, size: $size" }
+
+        val maxPageNumber = (maxNotes - 1) / size
+        val adjustedPageNumber = minOf(page, maxPageNumber)
+
+        val pageable = PageRequest.of(adjustedPageNumber, size)
+
+        val userId = tokenService.getCurrentUserId()
+        val notesPage =
+            noteRepository
+                .getNotesByUser(userId, pageable)
+                .map { NoteResponse(it) }
+
+        val totalElements = minOf(notesPage.totalElements, maxNotes.toLong())
+        val totalPages = (totalElements + size - 1) / size
+
+        return PagedNoteResponse(
+            notesPage,
+            totalElements,
+            totalPages.toInt(),
+        )
+    }
+
+    @PreAuthorize("hasRole('USER')")
     fun getNote(id: NoteId): NoteResponse {
         logger.info { "[getNote] Getting note with id: $id" }
         val note = noteRepository.getById(id)
         checkIfUserIdIsCurrentUser(note.createdBy)
         return NoteResponse(note)
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    fun getNoteHistory(
+        noteId: NoteId,
+        page: Int,
+        size: Int,
+    ): PagedNoteHistoryResponse {
+        logger.info { "[getNoteHistory] Getting history for note with id: $noteId" }
+
+        val note = noteRepository.getById(noteId)
+        checkIfUserIdIsCurrentUser(note.createdBy)
+
+        val pageable = PageRequest.of(page, size)
+
+        val historyPage =
+            noteHistoryRepository
+                .getHistoryByNoteId(noteId, pageable)
+                .map { NoteHistoryResponse(it) }
+
+        return PagedNoteHistoryResponse(historyPage)
     }
 
     @PreAuthorize("hasRole('USER')")
@@ -94,62 +141,6 @@ class NoteService(
         return ResponseEntity.noContent().build()
     }
 
-    @PreAuthorize("hasRole('USER')")
-    fun getNotes(pageable: Pageable): PagedNoteResponse {
-        logger.info { "[getNotes] Getting notes, page: ${pageable.pageNumber}, size: ${pageable.pageSize}" }
-
-        val adjustedPageSize = minOf(pageable.pageSize, maxPageSize)
-        val maxPageNumber = (maxNotes - 1) / adjustedPageSize
-        val adjustedPageNumber = minOf(pageable.pageNumber, maxPageNumber)
-
-        val adjustedPageable =
-            PageRequest.of(
-                adjustedPageNumber,
-                adjustedPageSize,
-            )
-
-        val userId = tokenService.getCurrentUserId()
-        val notesPage =
-            noteRepository
-                .getNotesByUser(userId, adjustedPageable)
-                .map { NoteResponse(it) }
-
-        val totalElements = minOf(notesPage.totalElements, maxNotes.toLong())
-        val totalPages = (totalElements + adjustedPageSize - 1) / adjustedPageSize
-
-        return PagedNoteResponse(
-            notesPage,
-            totalElements,
-            totalPages.toInt(),
-        )
-    }
-
-    @PreAuthorize("hasRole('USER')")
-    fun getNoteHistory(
-        noteId: NoteId,
-        pageable: Pageable,
-    ): PagedNoteHistoryResponse {
-        logger.info { "[getNoteHistory] Getting history for note with id: $noteId" }
-
-        val note = noteRepository.getById(noteId)
-        checkIfUserIdIsCurrentUser(note.createdBy)
-
-        val adjustedPageSize = minOf(pageable.pageSize, maxPageSize)
-        val adjustedPageable = PageRequest.of(pageable.pageNumber, adjustedPageSize)
-
-        val historyPage =
-            noteHistoryRepository
-                .getHistoryByNoteId(noteId, adjustedPageable)
-                .map { NoteHistoryResponse(it) }
-
-        return PagedNoteHistoryResponse(historyPage)
-    }
-
-    private fun hasNoteChanged(
-        originalNote: Note,
-        noteRequest: NoteRequest,
-    ): Boolean = originalNote.title != noteRequest.title || originalNote.content != noteRequest.content
-
     private fun checkIfUserIdIsCurrentUser(userId: UserId) {
         if (tokenService.getCurrentUserId() != userId) {
             // throw not found here to prevent revealing that a note exists
@@ -157,4 +148,9 @@ class NoteService(
             throw NoteNotFoundException("Note not found")
         }
     }
+
+    private fun hasNoteChanged(
+        originalNote: Note,
+        noteRequest: NoteRequest,
+    ): Boolean = originalNote.title != noteRequest.title || originalNote.content != noteRequest.content
 }

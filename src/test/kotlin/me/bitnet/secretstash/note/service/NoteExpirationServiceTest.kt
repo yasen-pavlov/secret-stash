@@ -19,6 +19,7 @@ import org.quartz.JobDetail
 import org.quartz.JobKey
 import org.quartz.Scheduler
 import org.quartz.Trigger
+import java.time.ZoneOffset.UTC
 import java.time.ZonedDateTime
 import java.util.UUID
 
@@ -51,8 +52,6 @@ class NoteExpirationServiceTest {
                 title = "Test Note",
                 content = "Test Content",
                 createdBy = userId,
-                createdAt = ZonedDateTime.now(),
-                updatedAt = ZonedDateTime.now(),
             )
     }
 
@@ -71,7 +70,7 @@ class NoteExpirationServiceTest {
     @Test
     fun `should schedule deletion when note has future expiration timestamp in the future`() {
         // Arrange
-        note.expiresAt = ZonedDateTime.now().plusMinutes(5)
+        note.expiresAt = ZonedDateTime.now(UTC).plusMinutes(5)
         whenever(scheduler.checkExists(Mockito.any(JobKey::class.java))).thenReturn(false)
 
         // Act
@@ -93,7 +92,7 @@ class NoteExpirationServiceTest {
     @Test
     fun `should schedule immediate deletion when note has past expiration time`() {
         // Arrange
-        note.expiresAt = ZonedDateTime.now().minusMinutes(5)
+        note.expiresAt = ZonedDateTime.now(UTC).minusMinutes(5)
 
         // Act
         noteExpirationService.scheduleNoteDeletion(note)
@@ -110,7 +109,7 @@ class NoteExpirationServiceTest {
     @Test
     fun `should update existing job when job already exists`() {
         // Arrange
-        note.expiresAt = ZonedDateTime.now().plusMinutes(10)
+        note.expiresAt = ZonedDateTime.now(UTC).plusMinutes(10)
         whenever(scheduler.checkExists(Mockito.any(JobKey::class.java))).thenReturn(true)
 
         // Act

@@ -2,20 +2,16 @@ package me.bitnet.secretstash.note.domain
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
-import jakarta.persistence.EntityListeners
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import jakarta.persistence.Version
 import me.bitnet.secretstash.note.dto.NoteRequest
-import org.springframework.data.annotation.CreatedDate
-import org.springframework.data.annotation.LastModifiedDate
-import org.springframework.data.jpa.domain.support.AuditingEntityListener
+import java.time.ZoneOffset.UTC
 import java.time.ZonedDateTime
 import java.util.UUID
 
 @Entity
 @Table(name = "note")
-@EntityListeners(AuditingEntityListener::class)
 @Suppress("JpaDataSourceORMInspection")
 class Note(
     @field:Id
@@ -28,11 +24,9 @@ class Note(
     @field:Column(name = "created_by")
     var createdBy: UserId,
     @field:Column(name = "created_at")
-    @field:CreatedDate
-    var createdAt: ZonedDateTime,
+    var createdAt: ZonedDateTime = ZonedDateTime.now(UTC),
     @field:Column(name = "updated_at")
-    @field:LastModifiedDate
-    var updatedAt: ZonedDateTime,
+    var updatedAt: ZonedDateTime = ZonedDateTime.now(UTC),
     @field:Column(name = "expires_at")
     var expiresAt: ZonedDateTime? = null,
     @field:Version
@@ -44,21 +38,20 @@ class Note(
         title = noteRequest.title,
         content = noteRequest.content,
         createdBy = userId,
-        createdAt = ZonedDateTime.now(),
-        updatedAt = ZonedDateTime.now(),
         expiresAt = calculateExpiresAt(noteRequest.ttlMinutes),
     )
 
     fun update(noteRequest: NoteRequest) {
         title = noteRequest.title
         content = noteRequest.content
+        updatedAt = ZonedDateTime.now(UTC)
         expiresAt = calculateExpiresAt(noteRequest.ttlMinutes)
     }
 
     companion object {
         private fun calculateExpiresAt(ttlMinutes: Int?): ZonedDateTime? =
             if (ttlMinutes != null && ttlMinutes > 0) {
-                ZonedDateTime.now().plusMinutes(ttlMinutes.toLong())
+                ZonedDateTime.now(UTC).plusMinutes(ttlMinutes.toLong())
             } else {
                 null
             }

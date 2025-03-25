@@ -10,6 +10,9 @@ import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.validation.BindingResult
 import org.springframework.validation.FieldError
 import org.springframework.web.bind.MethodArgumentNotValidException
+import org.springframework.web.bind.MissingPathVariableException
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
+import java.util.UUID
 
 class GlobalExceptionHandlerTest {
     private val exceptionHandler = GlobalExceptionHandler()
@@ -72,5 +75,64 @@ class GlobalExceptionHandlerTest {
 
         val errors = responseBody["errors"] as Map<*, *>
         assertThat(errors["message"]).isEqualTo(errorMessage)
+    }
+
+    @Test
+    fun `test handleMethodArgumentTypeMismatchException returns specific message for UUID`() {
+        // Arrange
+        val exception = mock(MethodArgumentTypeMismatchException::class.java)
+        whenever(exception.name).thenReturn("noteId")
+        whenever(exception.requiredType).thenReturn(UUID::class.java)
+
+        // Act
+        val responseEntity = exceptionHandler.handleTypeMismatchException(exception)
+
+        // Assert
+        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+
+        val responseBody = responseEntity.body!!
+        assertThat(responseBody["status"]).isEqualTo(HttpStatus.BAD_REQUEST.value())
+
+        val errors = responseBody["errors"] as Map<*, *>
+        assertThat(errors["message"]).isEqualTo("Invalid UUID format for parameter 'noteId'")
+    }
+
+    @Test
+    fun `test handleMethodArgumentTypeMismatchException returns generic message for other types`() {
+        // Arrange
+        val exception = mock(MethodArgumentTypeMismatchException::class.java)
+        whenever(exception.name).thenReturn("count")
+        whenever(exception.requiredType).thenReturn(Int::class.java)
+
+        // Act
+        val responseEntity = exceptionHandler.handleTypeMismatchException(exception)
+
+        // Assert
+        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+
+        val responseBody = responseEntity.body!!
+        assertThat(responseBody["status"]).isEqualTo(HttpStatus.BAD_REQUEST.value())
+
+        val errors = responseBody["errors"] as Map<*, *>
+        assertThat(errors["message"]).isEqualTo("Invalid parameter value: 'count' must be of type int")
+    }
+
+    @Test
+    fun `test handleMissingPathVariableException returns specific message`() {
+        // Arrange
+        val exception = mock(MissingPathVariableException::class.java)
+        whenever(exception.variableName).thenReturn("noteId")
+
+        // Act
+        val responseEntity = exceptionHandler.handleMissingPathVariableException(exception)
+
+        // Assert
+        assertThat(responseEntity.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)
+
+        val responseBody = responseEntity.body!!
+        assertThat(responseBody["status"]).isEqualTo(HttpStatus.BAD_REQUEST.value())
+
+        val errors = responseBody["errors"] as Map<*, *>
+        assertThat(errors["message"]).isEqualTo("Missing required path variable: 'noteId'")
     }
 }

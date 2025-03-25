@@ -16,7 +16,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import java.time.ZonedDateTime
 import java.util.UUID
 
 class NoteRestControllerIntegrationTest : BaseIntegrationTest() {
@@ -324,14 +323,7 @@ class NoteRestControllerIntegrationTest : BaseIntegrationTest() {
 
     private fun createTestNote(noteRequest: NoteRequest): NoteId {
         val note =
-            Note(
-                id = UUID.randomUUID(),
-                title = noteRequest.title,
-                content = noteRequest.content,
-                createdBy = testUserId,
-                createdAt = ZonedDateTime.now(),
-                updatedAt = ZonedDateTime.now(),
-            )
+            Note(noteRequest, testUserId)
 
         val savedNote = jpaNoteRepository.save(note)
         return savedNote.id

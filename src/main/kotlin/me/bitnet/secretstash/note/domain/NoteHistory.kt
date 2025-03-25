@@ -10,6 +10,7 @@ import java.util.UUID
 
 @Entity
 @Table(name = "note_history")
+@Suppress("JpaDataSourceORMInspection")
 class NoteHistory(
     @field:Id
     @field:Column(name = "id")
@@ -22,8 +23,8 @@ class NoteHistory(
     var content: String,
     @field:Column(name = "updated_at")
     var updatedAt: ZonedDateTime,
-    @field:Version
     @field:Column(name = "version")
+    @field:Version
     var version: Long = 0L,
 ) {
     constructor(note: Note) : this(
@@ -31,7 +32,7 @@ class NoteHistory(
         noteId = note.id,
         title = note.title,
         content = note.content,
-        updatedAt = ZonedDateTime.now(),
+        updatedAt = note.updatedAt,
     )
 }
 

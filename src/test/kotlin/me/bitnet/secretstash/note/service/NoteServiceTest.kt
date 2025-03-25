@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.whenever
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
+import java.time.ZoneOffset.UTC
 import java.time.ZonedDateTime
 import java.util.UUID
 
@@ -42,51 +43,6 @@ class NoteServiceTest {
     private val noteId = UUID.randomUUID()
 
     @Test
-    fun `should throw exception when getting note with different user id`() {
-        // Arrange
-        val note = createTestNote(ownerId)
-        whenever(noteRepository.getById(noteId)).thenReturn(note)
-        whenever(tokenService.getCurrentUserId()).thenReturn(differentUserId)
-
-        // Act & Assert
-        assertThatThrownBy {
-            noteService.getNote(noteId)
-        }.isInstanceOf(NoteNotFoundException::class.java)
-            .hasMessage("Note not found")
-    }
-
-    @Test
-    fun `should throw exception when updating note with different user id`() {
-        // Arrange
-        val note = createTestNote(ownerId)
-        val updateRequest = NoteRequest("Updated Title", "Updated Content")
-
-        whenever(noteRepository.getById(noteId)).thenReturn(note)
-        whenever(tokenService.getCurrentUserId()).thenReturn(differentUserId)
-
-        // Act & Assert
-        assertThatThrownBy {
-            noteService.updateNote(noteId, updateRequest)
-        }.isInstanceOf(NoteNotFoundException::class.java)
-            .hasMessage("Note not found")
-    }
-
-    @Test
-    fun `should throw exception when deleting note with different user id`() {
-        // Arrange
-        val note = createTestNote(ownerId)
-
-        whenever(noteRepository.getById(noteId)).thenReturn(note)
-        whenever(tokenService.getCurrentUserId()).thenReturn(differentUserId)
-
-        // Act & Assert
-        assertThatThrownBy {
-            noteService.deleteNote(noteId)
-        }.isInstanceOf(NoteNotFoundException::class.java)
-            .hasMessage("Note not found")
-    }
-
-    @Test
     fun `should get paginated notes with valid page parameters`() {
         // Arrange
         val pageSize = 20
@@ -99,7 +55,7 @@ class NoteServiceTest {
         whenever(noteRepository.getNotesByUser(ownerId, pageable)).thenReturn(notesPage)
 
         // Act
-        val result = noteService.getNotes(pageable)
+        val result = noteService.getNotes(pageNumber, pageSize)
 
         // Assert
         assertThat(result.content).hasSize(pageSize)
@@ -112,30 +68,6 @@ class NoteServiceTest {
     }
 
     @Test
-    fun `should cap page size to maximum allowed`() {
-        // Arrange
-        val pageSize = 150 // Greater than max allowed (100)
-        val maxPageSize = 100 // From NoteService
-        val pageNumber = 0
-        val requestedPageable = PageRequest.of(pageNumber, pageSize)
-        val adjustedPageable = PageRequest.of(pageNumber, maxPageSize)
-        val notes = createTestNotes(maxPageSize)
-        val notesPage = PageImpl(notes, adjustedPageable, 150L)
-
-        whenever(tokenService.getCurrentUserId()).thenReturn(ownerId)
-        whenever(noteRepository.getNotesByUser(ownerId, adjustedPageable)).thenReturn(notesPage)
-
-        // Act
-        val result = noteService.getNotes(requestedPageable)
-
-        // Assert
-        assertThat(result.size).isEqualTo(maxPageSize)
-        assertThat(result.content).hasSize(maxPageSize)
-        assertThat(result.totalElements).isEqualTo(150L)
-        assertThat(result.totalPages).isEqualTo(2) // 150/100 = 1.5 -> 2
-    }
-
-    @Test
     fun `should adjust page number if exceeds maximum allowed`() {
         // Arrange
         val pageSize = 10
@@ -144,13 +76,13 @@ class NoteServiceTest {
 
         val requestedPageable = PageRequest.of(excessivePageNumber, pageSize)
         val emptyList = listOf<Note>()
-        val notesPage = PageImpl(emptyList, PageRequest.of(0, pageSize), totalNotes)
+        val notesPage = PageImpl(emptyList, requestedPageable, totalNotes)
 
         whenever(tokenService.getCurrentUserId()).thenReturn(ownerId)
         whenever(noteRepository.getNotesByUser(ownerId, requestedPageable)).thenReturn(notesPage)
 
         // Act
-        val result = noteService.getNotes(requestedPageable)
+        val result = noteService.getNotes(excessivePageNumber, pageSize)
 
         // Assert
         assertThat(result.totalElements).isEqualTo(totalNotes)
@@ -173,7 +105,7 @@ class NoteServiceTest {
         whenever(noteRepository.getNotesByUser(ownerId, pageable)).thenReturn(notesPage)
 
         // Act
-        val result = noteService.getNotes(pageable)
+        val result = noteService.getNotes(pageNumber, pageSize)
 
         // Assert
         assertThat(result.totalElements).isEqualTo(maxNotes)
@@ -265,7 +197,7 @@ class NoteServiceTest {
         val pageNumber = 0
         val pageable = PageRequest.of(pageNumber, pageSize)
         val note = createTestNote(ownerId)
-        val noteHistories = createTestNoteHistories(3)
+        val noteHistories = createTestNoteHistories()
         val historiesPage = PageImpl(noteHistories, pageable, noteHistories.size.toLong())
 
         whenever(noteRepository.getById(noteId)).thenReturn(note)
@@ -273,7 +205,7 @@ class NoteServiceTest {
         whenever(noteHistoryRepository.getHistoryByNoteId(noteId, pageable)).thenReturn(historiesPage)
 
         // Act
-        val result = noteService.getNoteHistory(noteId, pageable)
+        val result = noteService.getNoteHistory(noteId, pageNumber, pageSize)
 
         // Assert
         assertThat(result.content).hasSize(3)
@@ -282,46 +214,6 @@ class NoteServiceTest {
         assertThat(result.totalElements).isEqualTo(3)
         assertThat(result.isFirst).isTrue()
         assertThat(result.isLast).isTrue()
-    }
-
-    @Test
-    fun `should throw exception when getting history for note with different user id`() {
-        // Arrange
-        val note = createTestNote(ownerId)
-        val pageable = PageRequest.of(0, 10)
-
-        whenever(noteRepository.getById(noteId)).thenReturn(note)
-        whenever(tokenService.getCurrentUserId()).thenReturn(differentUserId)
-
-        // Act & Assert
-        assertThatThrownBy {
-            noteService.getNoteHistory(noteId, pageable)
-        }.isInstanceOf(NoteNotFoundException::class.java)
-            .hasMessage("Note not found")
-    }
-
-    @Test
-    fun `should cap note history page size to maximum allowed`() {
-        // Arrange
-        val pageSize = 150 // Greater than max allowed (100)
-        val maxPageSize = 100 // From NoteService
-        val pageNumber = 0
-        val note = createTestNote(ownerId)
-        val requestedPageable = PageRequest.of(pageNumber, pageSize)
-        val adjustedPageable = PageRequest.of(pageNumber, maxPageSize)
-        val noteHistories = createTestNoteHistories(maxPageSize)
-        val historiesPage = PageImpl(noteHistories, adjustedPageable, 150L)
-
-        whenever(noteRepository.getById(noteId)).thenReturn(note)
-        whenever(tokenService.getCurrentUserId()).thenReturn(ownerId)
-        whenever(noteHistoryRepository.getHistoryByNoteId(noteId, adjustedPageable)).thenReturn(historiesPage)
-
-        // Act
-        val result = noteService.getNoteHistory(noteId, requestedPageable)
-
-        // Assert
-        assertThat(result.size).isEqualTo(maxPageSize)
-        assertThat(result.content).hasSize(maxPageSize)
     }
 
     @Test
@@ -341,21 +233,75 @@ class NoteServiceTest {
             .delete(note)
     }
 
-    private fun createTestNoteHistories(count: Int): List<NoteHistory> {
-        val histories = mutableListOf<NoteHistory>()
-        for (i in 1..count) {
-            histories.add(
-                NoteHistory(
-                    id = UUID.randomUUID(),
-                    noteId = noteId,
-                    title = "Historical Title $i",
-                    content = "Historical Content $i",
-                    updatedAt = ZonedDateTime.now().minusDays(i.toLong()),
-                ),
-            )
-        }
-        return histories
+    @Test
+    fun `should throw exception when getting note with different user id`() {
+        // Arrange
+        val note = createTestNote(ownerId)
+        whenever(noteRepository.getById(noteId)).thenReturn(note)
+        whenever(tokenService.getCurrentUserId()).thenReturn(differentUserId)
+
+        // Act & Assert
+        assertThatThrownBy {
+            noteService.getNote(noteId)
+        }.isInstanceOf(NoteNotFoundException::class.java)
+            .hasMessage("Note not found")
     }
+
+    @Test
+    fun `should throw exception when updating note with different user id`() {
+        // Arrange
+        val note = createTestNote(ownerId)
+        val updateRequest = NoteRequest("Updated Title", "Updated Content")
+
+        whenever(noteRepository.getById(noteId)).thenReturn(note)
+        whenever(tokenService.getCurrentUserId()).thenReturn(differentUserId)
+
+        // Act & Assert
+        assertThatThrownBy {
+            noteService.updateNote(noteId, updateRequest)
+        }.isInstanceOf(NoteNotFoundException::class.java)
+            .hasMessage("Note not found")
+    }
+
+    @Test
+    fun `should throw exception when deleting note with different user id`() {
+        // Arrange
+        val note = createTestNote(ownerId)
+
+        whenever(noteRepository.getById(noteId)).thenReturn(note)
+        whenever(tokenService.getCurrentUserId()).thenReturn(differentUserId)
+
+        // Act & Assert
+        assertThatThrownBy {
+            noteService.deleteNote(noteId)
+        }.isInstanceOf(NoteNotFoundException::class.java)
+            .hasMessage("Note not found")
+    }
+
+    @Test
+    fun `should throw exception when getting history for note with different user id`() {
+        // Arrange
+        val note = createTestNote(ownerId)
+        val pageNumber = 0
+        val pageSize = 10
+
+        whenever(noteRepository.getById(noteId)).thenReturn(note)
+        whenever(tokenService.getCurrentUserId()).thenReturn(differentUserId)
+
+        // Act & Assert
+        assertThatThrownBy {
+            noteService.getNoteHistory(noteId, pageNumber, pageSize)
+        }.isInstanceOf(NoteNotFoundException::class.java)
+            .hasMessage("Note not found")
+    }
+
+    private fun createTestNote(userId: UUID): Note =
+        Note(
+            id = noteId,
+            title = "Test Note",
+            content = "Test Content",
+            createdBy = userId,
+        )
 
     private fun createTestNotes(count: Int): List<Note> {
         val notes = mutableListOf<Note>()
@@ -366,21 +312,26 @@ class NoteServiceTest {
                     title = "Test Note $i",
                     content = "Test Content $i",
                     createdBy = ownerId,
-                    createdAt = ZonedDateTime.now().minusDays(i.toLong()),
-                    updatedAt = ZonedDateTime.now(),
+                    createdAt = ZonedDateTime.now(UTC).minusDays(i.toLong()),
                 ),
             )
         }
         return notes
     }
 
-    private fun createTestNote(userId: UUID): Note =
-        Note(
-            id = noteId,
-            title = "Test Note",
-            content = "Test Content",
-            createdBy = userId,
-            createdAt = ZonedDateTime.now(),
-            updatedAt = ZonedDateTime.now(),
-        )
+    private fun createTestNoteHistories(): List<NoteHistory> {
+        val histories = mutableListOf<NoteHistory>()
+        for (i in 1..3) {
+            histories.add(
+                NoteHistory(
+                    id = UUID.randomUUID(),
+                    noteId = noteId,
+                    title = "Historical Title $i",
+                    content = "Historical Content $i",
+                    updatedAt = ZonedDateTime.now(UTC).minusDays(i.toLong()),
+                ),
+            )
+        }
+        return histories
+    }
 }

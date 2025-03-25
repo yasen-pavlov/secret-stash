@@ -3,9 +3,9 @@ package me.bitnet.secretstash.note.job
 import io.github.oshai.kotlinlogging.KotlinLogging
 import me.bitnet.secretstash.note.infrastructure.NoteRepository
 import org.quartz.DisallowConcurrentExecution
+import org.quartz.Job
 import org.quartz.JobExecutionContext
 import org.quartz.PersistJobDataAfterExecution
-import org.springframework.scheduling.quartz.QuartzJobBean
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -15,7 +15,7 @@ import java.util.UUID
 @PersistJobDataAfterExecution
 class NoteExpirationJob(
     private val noteRepository: NoteRepository,
-) : QuartzJobBean() {
+) : Job {
     private val logger = KotlinLogging.logger {}
 
     companion object {
@@ -23,7 +23,7 @@ class NoteExpirationJob(
     }
 
     @Transactional
-    override fun executeInternal(context: JobExecutionContext) {
+    override fun execute(context: JobExecutionContext) {
         val jobDataMap = context.mergedJobDataMap
         val noteIdString = jobDataMap.getString(NOTE_ID_KEY)
 
