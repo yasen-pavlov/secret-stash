@@ -16,11 +16,14 @@ class NoteRepositoryTest {
     @Mock
     private lateinit var jpaNoteRepository: JpaNoteRepository
 
+    @Mock
+    private lateinit var noteHistoryRepository: NoteHistoryRepository
+
     @InjectMocks
     private lateinit var noteRepository: NoteRepository
 
     @Test
-    fun `should throw NoteNoteFoundException when note not found`() {
+    fun `should throw NoteNotFoundException when note not found`() {
         // Arrange
         val noteId = UUID.randomUUID()
         whenever(jpaNoteRepository.findById(noteId)).thenReturn(Optional.empty())

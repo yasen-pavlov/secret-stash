@@ -7,6 +7,7 @@ import me.bitnet.secretstash.util.BaseIntegrationTest
 import me.bitnet.secretstash.util.WithMockJwt
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.data.domain.PageRequest
 import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
@@ -234,6 +235,91 @@ class NoteRestControllerIntegrationTest : BaseIntegrationTest() {
             .andExpect(jsonPath("$.status").value(400))
             .andExpect(jsonPath("$.errors.title").value("Title must be between 1 and 255 characters"))
             .andExpect(jsonPath("$.errors.content").value("Content must be between 1 and 5000 characters"))
+    }
+
+    @Test
+    @WithMockJwt(roles = ["USER"])
+    fun `should retrieve note history when user has USER role and is the creator`() {
+        // Arrange
+        val originalNoteRequest =
+            NoteRequest(
+                title = "Original Title",
+                content = "Original Content",
+            )
+
+        val noteId = createTestNote(originalNoteRequest)
+
+        // Update the note multiple times to create history entries
+        val updateRequests =
+            listOf(
+                NoteRequest(title = "Updated Title 1", content = "Updated Content 1"),
+                NoteRequest(title = "Updated Title 2", content = "Updated Content 2"),
+                NoteRequest(title = "Updated Title 3", content = "Updated Content 3"),
+            )
+
+        for (updateRequest in updateRequests) {
+            mockMvc
+                .perform(
+                    put("/api/notes/$noteId")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateRequest)),
+                ).andExpect(status().isOk)
+        }
+
+        // Act & Assert
+        val result =
+            mockMvc
+                .perform(
+                    get("/api/notes/$noteId/history?page=0&size=10")
+                        .with(csrf()),
+                ).andExpect(status().isOk)
+                .andExpect(jsonPath("$.content").isArray)
+                .andExpect(jsonPath("$.content.length()").value(3))
+                .andExpect(jsonPath("$.content[0].title").value("Updated Title 2")) // Most recent first
+                .andExpect(jsonPath("$.content[0].content").value("Updated Content 2"))
+                .andExpect(jsonPath("$.content[1].title").value("Updated Title 1"))
+                .andExpect(jsonPath("$.content[1].content").value("Updated Content 1"))
+                .andExpect(jsonPath("$.content[2].title").value("Original Title"))
+                .andExpect(jsonPath("$.content[2].content").value("Original Content"))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.totalElements").isNumber)
+                .andExpect(jsonPath("$.totalPages").isNumber)
+                .andExpect(jsonPath("$.isFirst").value(true))
+                .andReturn()
+
+        // Verify data is correctly persisted in the database
+        val responseContent = result.response.contentAsString
+        val responseJson = objectMapper.readTree(responseContent)
+        val historyEntries = jpaNoteHistoryRepository.findByNoteIdOrderByUpdatedAtDesc(noteId, PageRequest.of(0, 10))
+
+        assertThat(historyEntries.content.size).isEqualTo(responseJson.get("content").size())
+        assertThat(historyEntries.content[0].title).isEqualTo("Updated Title 2")
+        assertThat(historyEntries.content[0].content).isEqualTo("Updated Content 2")
+        assertThat(historyEntries.content[1].title).isEqualTo("Updated Title 1")
+        assertThat(historyEntries.content[1].content).isEqualTo("Updated Content 1")
+        assertThat(historyEntries.content[2].title).isEqualTo("Original Title")
+        assertThat(historyEntries.content[2].content).isEqualTo("Original Content")
+
+        // Also pagination
+        mockMvc
+            .perform(
+                get("/api/notes/$noteId/history?page=0&size=2")
+                    .with(csrf()),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.content").isArray)
+            .andExpect(jsonPath("$.content.length()").value(2))
+            .andExpect(jsonPath("$.isLast").value(false))
+
+        mockMvc
+            .perform(
+                get("/api/notes/$noteId/history?page=1&size=2")
+                    .with(csrf()),
+            ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.content").isArray)
+            .andExpect(jsonPath("$.content.length()").value(1))
+            .andExpect(jsonPath("$.isLast").value(true))
     }
 
     private fun createTestNote(noteRequest: NoteRequest): NoteId {

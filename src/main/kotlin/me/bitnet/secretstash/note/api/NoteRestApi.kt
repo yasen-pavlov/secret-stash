@@ -8,6 +8,7 @@ import jakarta.validation.Valid
 import me.bitnet.secretstash.note.domain.NoteId
 import me.bitnet.secretstash.note.dto.NoteRequest
 import me.bitnet.secretstash.note.dto.NoteResponse
+import me.bitnet.secretstash.note.dto.PagedNoteHistoryResponse
 import me.bitnet.secretstash.note.dto.PagedNoteResponse
 import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
@@ -63,4 +64,16 @@ interface NoteRestApi {
         @Parameter(description = "Note id", required = true)
         @PathVariable noteId: NoteId,
     ): ResponseEntity<Void>
+
+    @GetMapping("/{noteId}/history")
+    @Operation(
+        summary = "Get note history",
+        description = "Gets history of changes for a specific note sorted by update date",
+    )
+    fun getNoteHistory(
+        @Parameter(description = "Note id", required = true)
+        @PathVariable noteId: NoteId,
+        @Parameter(description = "Pagination parameters (page size is capped at 100)")
+        pageable: Pageable,
+    ): PagedNoteHistoryResponse
 }

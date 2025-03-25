@@ -1,0 +1,51 @@
+databaseChangeLog:
+  - changeSet:
+      id: 5
+      author: Yasen
+      changes:
+        - createTable:
+            tableName: note_history
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: note_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: bigint
+                  # noinspection YAMLSchemaValidation
+                  defaultValue: 0
+        - createIndex:
+            indexName: idx_note_history_note_id_updated_at
+            tableName: note_history
+            columns:
+              - column:
+                  name: note_id
+              - column:
+                  name: updated_at
+            unique: false
+      rollback:
+        - dropTable:
+            tableName: note_history

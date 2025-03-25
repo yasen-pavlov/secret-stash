@@ -1,8 +1,10 @@
 package me.bitnet.secretstash.note.service
 
 import me.bitnet.secretstash.note.domain.Note
+import me.bitnet.secretstash.note.domain.NoteHistory
 import me.bitnet.secretstash.note.dto.NoteRequest
 import me.bitnet.secretstash.note.exception.NoteNotFoundException
+import me.bitnet.secretstash.note.infrastructure.NoteHistoryRepository
 import me.bitnet.secretstash.note.infrastructure.NoteRepository
 import me.bitnet.secretstash.util.TokenService
 import org.assertj.core.api.Assertions.assertThat
@@ -22,6 +24,9 @@ import java.util.UUID
 class NoteServiceTest {
     @Mock
     private lateinit var noteRepository: NoteRepository
+
+    @Mock
+    private lateinit var noteHistoryRepository: NoteHistoryRepository
 
     @Mock
     private lateinit var tokenService: TokenService
@@ -173,6 +178,183 @@ class NoteServiceTest {
         // Assert
         assertThat(result.totalElements).isEqualTo(maxNotes)
         assertThat(result.totalPages).isEqualTo(10) // 1000/100 = 10
+    }
+
+    @Test
+    fun `should save note history when updating note with different content`() {
+        // Arrange
+        val note = createTestNote(ownerId)
+        val originalTitle = note.title
+        val originalContent = note.content
+        val updateRequest = NoteRequest("Updated Title", "Updated Content")
+
+        whenever(noteRepository.getById(noteId)).thenReturn(note)
+        whenever(tokenService.getCurrentUserId()).thenReturn(ownerId)
+
+        // Act
+        noteService.updateNote(noteId, updateRequest)
+
+        // Assert
+        org.mockito.kotlin
+            .verify(noteHistoryRepository)
+            .saveFromNote(note)
+        assertThat(note.title).isEqualTo("Updated Title")
+        assertThat(note.content).isEqualTo("Updated Content")
+        assertThat(originalTitle).isNotEqualTo(note.title)
+        assertThat(originalContent).isNotEqualTo(note.content)
+    }
+
+    @Test
+    fun `should not save note history when updating note with same content`() {
+        // Arrange
+        val note = createTestNote(ownerId)
+        val updateRequest = NoteRequest(note.title, note.content) // Same title and content
+
+        whenever(noteRepository.getById(noteId)).thenReturn(note)
+        whenever(tokenService.getCurrentUserId()).thenReturn(ownerId)
+
+        // Act
+        noteService.updateNote(noteId, updateRequest)
+
+        // Assert
+        org.mockito.kotlin
+            .verify(noteHistoryRepository, org.mockito.kotlin.never())
+            .saveFromNote(note)
+    }
+
+    @Test
+    fun `should save note history when updating only title`() {
+        // Arrange
+        val note = createTestNote(ownerId)
+        val updateRequest = NoteRequest("Updated Title Only", note.content) // Only title changes
+
+        whenever(noteRepository.getById(noteId)).thenReturn(note)
+        whenever(tokenService.getCurrentUserId()).thenReturn(ownerId)
+
+        // Act
+        noteService.updateNote(noteId, updateRequest)
+
+        // Assert
+        org.mockito.kotlin
+            .verify(noteHistoryRepository)
+            .saveFromNote(note)
+    }
+
+    @Test
+    fun `should save note history when updating only content`() {
+        // Arrange
+        val note = createTestNote(ownerId)
+        val updateRequest = NoteRequest(note.title, "Updated Content Only") // Only content changes
+
+        whenever(noteRepository.getById(noteId)).thenReturn(note)
+        whenever(tokenService.getCurrentUserId()).thenReturn(ownerId)
+
+        // Act
+        noteService.updateNote(noteId, updateRequest)
+
+        // Assert
+        org.mockito.kotlin
+            .verify(noteHistoryRepository)
+            .saveFromNote(note)
+    }
+
+    @Test
+    fun `should get note history with correct pagination`() {
+        // Arrange
+        val pageSize = 10
+        val pageNumber = 0
+        val pageable = PageRequest.of(pageNumber, pageSize)
+        val note = createTestNote(ownerId)
+        val noteHistories = createTestNoteHistories(3)
+        val historiesPage = PageImpl(noteHistories, pageable, noteHistories.size.toLong())
+
+        whenever(noteRepository.getById(noteId)).thenReturn(note)
+        whenever(tokenService.getCurrentUserId()).thenReturn(ownerId)
+        whenever(noteHistoryRepository.getHistoryByNoteId(noteId, pageable)).thenReturn(historiesPage)
+
+        // Act
+        val result = noteService.getNoteHistory(noteId, pageable)
+
+        // Assert
+        assertThat(result.content).hasSize(3)
+        assertThat(result.page).isEqualTo(pageNumber)
+        assertThat(result.size).isEqualTo(pageSize)
+        assertThat(result.totalElements).isEqualTo(3)
+        assertThat(result.isFirst).isTrue()
+        assertThat(result.isLast).isTrue()
+    }
+
+    @Test
+    fun `should throw exception when getting history for note with different user id`() {
+        // Arrange
+        val note = createTestNote(ownerId)
+        val pageable = PageRequest.of(0, 10)
+
+        whenever(noteRepository.getById(noteId)).thenReturn(note)
+        whenever(tokenService.getCurrentUserId()).thenReturn(differentUserId)
+
+        // Act & Assert
+        assertThatThrownBy {
+            noteService.getNoteHistory(noteId, pageable)
+        }.isInstanceOf(NoteNotFoundException::class.java)
+            .hasMessage("Note not found")
+    }
+
+    @Test
+    fun `should cap note history page size to maximum allowed`() {
+        // Arrange
+        val pageSize = 150 // Greater than max allowed (100)
+        val maxPageSize = 100 // From NoteService
+        val pageNumber = 0
+        val note = createTestNote(ownerId)
+        val requestedPageable = PageRequest.of(pageNumber, pageSize)
+        val adjustedPageable = PageRequest.of(pageNumber, maxPageSize)
+        val noteHistories = createTestNoteHistories(maxPageSize)
+        val historiesPage = PageImpl(noteHistories, adjustedPageable, 150L)
+
+        whenever(noteRepository.getById(noteId)).thenReturn(note)
+        whenever(tokenService.getCurrentUserId()).thenReturn(ownerId)
+        whenever(noteHistoryRepository.getHistoryByNoteId(noteId, adjustedPageable)).thenReturn(historiesPage)
+
+        // Act
+        val result = noteService.getNoteHistory(noteId, requestedPageable)
+
+        // Assert
+        assertThat(result.size).isEqualTo(maxPageSize)
+        assertThat(result.content).hasSize(maxPageSize)
+    }
+
+    @Test
+    fun `should delete note history when deleting note`() {
+        // Arrange
+        val note = createTestNote(ownerId)
+
+        whenever(noteRepository.getById(noteId)).thenReturn(note)
+        whenever(tokenService.getCurrentUserId()).thenReturn(ownerId)
+
+        // Act
+        noteService.deleteNote(noteId)
+
+        // Assert
+        org.mockito.kotlin
+            .verify(noteRepository)
+            .delete(note)
+    }
+
+    private fun createTestNoteHistories(count: Int): List<NoteHistory> {
+        val histories = mutableListOf<NoteHistory>()
+        for (i in 1..count) {
+            histories.add(
+                NoteHistory(
+                    id = UUID.randomUUID(),
+                    noteId = noteId,
+                    title = "Historical Title $i",
+                    content = "Historical Content $i",
+                    updatedAt = ZonedDateTime.now().minusDays(i.toLong()),
+                ),
+            )
+        }
+        return histories
     }
 
     private fun createTestNotes(count: Int): List<Note> {

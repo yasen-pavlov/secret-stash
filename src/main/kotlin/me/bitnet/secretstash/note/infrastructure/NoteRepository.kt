@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository
 @Repository
 class NoteRepository(
     private val jpaNoteRepository: JpaNoteRepository,
+    private val noteHistoryRepository: NoteHistoryRepository,
 ) {
     fun getById(noteId: NoteId): Note =
         jpaNoteRepository
@@ -19,10 +20,13 @@ class NoteRepository(
 
     fun save(note: Note): Note = jpaNoteRepository.save(note)
 
-    fun delete(note: Note): Unit = jpaNoteRepository.delete(note)
-
     fun getNotesByUser(
         userId: UserId,
         pageable: Pageable,
-    ): Page<Note> = jpaNoteRepository.findAllByCreatedByOrderByCreatedAtDesc(userId, pageable)
+    ): Page<Note> = jpaNoteRepository.findByCreatedByOrderByCreatedAtDesc(userId, pageable)
+
+    fun delete(note: Note) {
+        jpaNoteRepository.delete(note)
+        noteHistoryRepository.deleteByNoteId(note.id)
+    }
 }

@@ -1,6 +1,7 @@
 package me.bitnet.secretstash.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import me.bitnet.secretstash.note.infrastructure.JpaNoteHistoryRepository
 import me.bitnet.secretstash.note.infrastructure.JpaNoteRepository
 import me.bitnet.secretstash.ratelimiter.RedisRateLimiterService
 import org.junit.jupiter.api.BeforeEach
@@ -27,6 +28,9 @@ abstract class BaseIntegrationTest {
 
     @Autowired
     protected lateinit var jpaNoteRepository: JpaNoteRepository
+
+    @Autowired
+    protected lateinit var jpaNoteHistoryRepository: JpaNoteHistoryRepository
 
     @Autowired
     protected lateinit var scheduler: Scheduler
