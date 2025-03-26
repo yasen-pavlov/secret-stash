@@ -1,13 +1,13 @@
 services:
   secret_stash:
-    build:
-      context: ..
-      dockerfile: Dockerfile
-    container_name: secret_stash
+    container_name: "secret_stash"
+    image: "bitnet0/secret-stash:latest"
     environment:
       SPRING_DATASOURCE_URL: 'jdbc:postgresql://postgres_secret_stash/${SECRET_STASH_DB_NAME}'
       SPRING_DATASOURCE_USERNAME: '${SECRET_STASH_DB_USER}'
       SPRING_DATASOURCE_PASSWORD: '${SECRET_STASH_DB_PASSWORD}'
+      SPRING_DATA_REDIS_HOST: 'redis_secret_stash'
+      SPRING_DATA_REDIS_PORT: 6379
       SPRING_PROFILES_ACTIVE: '${SPRING_PROFILES}'
     ports:
       - "8081:8081"
