@@ -1,4 +1,4 @@
-package me.bitnet.secretstash.ratelimiter
+package me.bitnet.secretstash.util.ratelimiter
 
 /**
  * Annotation to apply rate limiting to REST endpoints or controller classes.
@@ -20,6 +20,6 @@ package me.bitnet.secretstash.ratelimiter
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
 annotation class RateLimit(
-    val value: Int = -1, // Number of requests
-    val windowSeconds: Int = -1, // Window size in seconds
+    val value: Int = -1,
+    val windowSeconds: Int = -1,
 )

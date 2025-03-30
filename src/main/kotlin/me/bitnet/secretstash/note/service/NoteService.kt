@@ -12,7 +12,7 @@ import me.bitnet.secretstash.note.dto.PagedNoteResponse
 import me.bitnet.secretstash.note.exception.NoteNotFoundException
 import me.bitnet.secretstash.note.infrastructure.NoteHistoryRepository
 import me.bitnet.secretstash.note.infrastructure.NoteRepository
-import me.bitnet.secretstash.util.TokenService
+import me.bitnet.secretstash.util.auth.TokenService
 import org.springframework.data.domain.PageRequest
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -118,11 +118,7 @@ class NoteService(
         note.update(noteRequest)
 
         if (oldExpiresAt != note.expiresAt) {
-            if (note.expiresAt == null) {
-                noteExpirationService.cancelScheduledDeletion(note.id)
-            } else {
-                noteExpirationService.scheduleNoteDeletion(note)
-            }
+            noteExpirationService.scheduleNoteDeletion(note)
         }
 
         return NoteResponse(note)

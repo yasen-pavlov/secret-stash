@@ -1,6 +1,6 @@
 package me.bitnet.secretstash.config
 
-import me.bitnet.secretstash.ratelimiter.RateLimiterInterceptor
+import me.bitnet.secretstash.util.ratelimiter.RateLimiterInterceptor
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry

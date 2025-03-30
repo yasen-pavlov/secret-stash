@@ -1,10 +1,10 @@
 package me.bitnet.secretstash.note.api
 
+import me.bitnet.secretstash.common.BaseIntegrationTest
+import me.bitnet.secretstash.common.WithMockJwt
 import me.bitnet.secretstash.note.domain.Note
 import me.bitnet.secretstash.note.domain.NoteId
 import me.bitnet.secretstash.note.dto.NoteRequest
-import me.bitnet.secretstash.util.BaseIntegrationTest
-import me.bitnet.secretstash.util.WithMockJwt
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.data.domain.PageRequest
@@ -20,7 +20,7 @@ import java.util.UUID
 
 class NoteRestControllerIntegrationTest : BaseIntegrationTest() {
     @Test
-    @WithMockJwt(roles = ["USER"])
+    @WithMockJwt
     fun `should create a note when user has USER role`() {
         // Arrange
         val noteRequest =
@@ -57,7 +57,7 @@ class NoteRestControllerIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    @WithMockJwt(roles = ["USER"])
+    @WithMockJwt
     fun `should get a note when user has USER role and is the creator`() {
         // Arrange
         val noteRequest =
@@ -80,7 +80,7 @@ class NoteRestControllerIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    @WithMockJwt(roles = ["USER"])
+    @WithMockJwt
     fun `should get paginated notes when user has USER role`() {
         // Arrange
         val numberOfNotes = 5
@@ -126,7 +126,7 @@ class NoteRestControllerIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    @WithMockJwt(roles = ["USER"])
+    @WithMockJwt
     fun `should update a note when user has USER role and is the creator`() {
         // Arrange
         val originalNoteRequest =
@@ -164,7 +164,7 @@ class NoteRestControllerIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    @WithMockJwt(roles = ["USER"])
+    @WithMockJwt
     fun `should delete a note when user has USER role and is the creator`() {
         // Arrange
         val noteRequest =
@@ -214,7 +214,7 @@ class NoteRestControllerIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    @WithMockJwt(roles = ["USER"])
+    @WithMockJwt
     fun `should return multiple validation errors when both title and content are invalid`() {
         // Arrange
         val invalidNoteRequest =
@@ -237,7 +237,7 @@ class NoteRestControllerIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    @WithMockJwt(roles = ["USER"])
+    @WithMockJwt
     fun `should retrieve note history when user has USER role and is the creator`() {
         // Arrange
         val originalNoteRequest =

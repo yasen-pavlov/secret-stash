@@ -122,11 +122,18 @@ Full API details are available in the Swagger documentation.
 
 The project is organized into the following packages:
 
-- `api` - REST controllers and API interfaces
-- `domain` - Domain models and entities
-- `dto` - Data Transfer Objects
-- `service` - Business logic and service implementations
-- `repository` - Data access layer
+- `config` - Spring Boot related configurations (security, web, exceptions, etc.)
+- `note` - Main business domain for notes management
+    - `api` - REST controllers and API interfaces
+    - `domain` - Domain models and entities
+    - `dto` - Data Transfer Objects
+    - `exception` - Domain-specific exceptions
+    - `infrastructure` - Data access repositories
+    - `job` - Scheduled jobs (e.g., note expiration)
+    - `service` - Business logic and service implementations
+- `util` - Utility services and components
+    - `auth` - Authentication and token handling services
+    - `ratelimiter` - Rate limiting implementation
 
 ## Development
 

@@ -1,8 +1,8 @@
-package me.bitnet.secretstash.ratelimiter
+package me.bitnet.secretstash.util.ratelimiter
 
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import me.bitnet.secretstash.util.TokenService
+import me.bitnet.secretstash.util.auth.TokenService
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

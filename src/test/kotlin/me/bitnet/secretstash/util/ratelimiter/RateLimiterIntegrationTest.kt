@@ -1,8 +1,8 @@
-package me.bitnet.secretstash.ratelimiter
+package me.bitnet.secretstash.util.ratelimiter
 
+import me.bitnet.secretstash.common.BaseIntegrationTest
+import me.bitnet.secretstash.common.WithMockJwt
 import me.bitnet.secretstash.note.dto.NoteRequest
-import me.bitnet.secretstash.util.BaseIntegrationTest
-import me.bitnet.secretstash.util.WithMockJwt
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 )
 class RateLimiterIntegrationTest : BaseIntegrationTest() {
     @Test
-    @WithMockJwt(roles = ["USER"])
+    @WithMockJwt
     fun `should allow requests within rate limit`() {
         val noteRequest = NoteRequest("Test Title", "Test Content")
         val requestBody = objectMapper.writeValueAsString(noteRequest)
@@ -36,7 +36,7 @@ class RateLimiterIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    @WithMockJwt(roles = ["USER"])
+    @WithMockJwt
     fun `should block requests exceeding rate limit`() {
         val noteRequest = NoteRequest("Test Title", "Test Content")
         val requestBody = objectMapper.writeValueAsString(noteRequest)
@@ -63,7 +63,7 @@ class RateLimiterIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    @WithMockJwt(roles = ["USER"])
+    @WithMockJwt
     fun `should reset rate limit after window expires`() {
         val noteRequest = NoteRequest("Test Title", "Test Content")
         val requestBody = objectMapper.writeValueAsString(noteRequest)

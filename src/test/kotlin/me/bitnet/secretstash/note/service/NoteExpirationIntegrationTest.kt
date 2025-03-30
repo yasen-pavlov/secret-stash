@@ -1,8 +1,8 @@
 package me.bitnet.secretstash.note.service
 
+import me.bitnet.secretstash.common.BaseIntegrationTest
+import me.bitnet.secretstash.common.WithMockJwt
 import me.bitnet.secretstash.note.dto.NoteRequest
-import me.bitnet.secretstash.util.BaseIntegrationTest
-import me.bitnet.secretstash.util.WithMockJwt
 import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
@@ -18,7 +18,7 @@ import java.util.UUID
 
 class NoteExpirationIntegrationTest : BaseIntegrationTest() {
     @Test
-    @WithMockJwt(roles = ["USER"])
+    @WithMockJwt
     fun `should schedule job when creating note with expiration time`() {
         // Arrange
         val noteRequest =
@@ -41,11 +41,10 @@ class NoteExpirationIntegrationTest : BaseIntegrationTest() {
                 .andExpect(jsonPath("$.expiresAt").exists())
                 .andReturn()
 
-        // Extract note ID from response
         val responseContent = result.response.contentAsString
         val noteId = objectMapper.readTree(responseContent).get("id").asText()
 
-        // Assert - verify job was scheduled
+        // Assert
         val jobKey = JobKey.jobKey("note-expiration-$noteId", "note-expiration-jobs")
         assertThat(scheduler.checkExists(jobKey)).isTrue()
 
@@ -54,7 +53,7 @@ class NoteExpirationIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    @WithMockJwt(roles = ["USER"])
+    @WithMockJwt
     fun `should cancel job when updating note to remove expiration time`() {
         // Arrange
         val originalRequest =
@@ -104,7 +103,7 @@ class NoteExpirationIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    @WithMockJwt(roles = ["USER"])
+    @WithMockJwt
     fun `should execute job and delete note when expiration time is reached`() {
         // Arrange
         val noteRequest =
@@ -147,7 +146,7 @@ class NoteExpirationIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    @WithMockJwt(roles = ["USER"])
+    @WithMockJwt
     fun `should update job when changing expiration time`() {
         // Arrange
         val originalRequest =

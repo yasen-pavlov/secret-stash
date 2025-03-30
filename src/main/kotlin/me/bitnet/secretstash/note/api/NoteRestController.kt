@@ -6,7 +6,7 @@ import me.bitnet.secretstash.note.dto.NoteResponse
 import me.bitnet.secretstash.note.dto.PagedNoteHistoryResponse
 import me.bitnet.secretstash.note.dto.PagedNoteResponse
 import me.bitnet.secretstash.note.service.NoteService
-import me.bitnet.secretstash.ratelimiter.RateLimit
+import me.bitnet.secretstash.util.ratelimiter.RateLimit
 import org.springframework.web.bind.annotation.RestController
 
 @RestController

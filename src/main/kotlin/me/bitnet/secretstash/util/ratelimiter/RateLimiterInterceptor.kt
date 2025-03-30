@@ -1,8 +1,8 @@
-package me.bitnet.secretstash.ratelimiter
+package me.bitnet.secretstash.util.ratelimiter
 
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import me.bitnet.secretstash.util.TokenService
+import me.bitnet.secretstash.util.auth.TokenService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
@@ -25,20 +25,16 @@ class RateLimiterInterceptor(
             return true
         }
 
-        // Check for RateLimit annotation on method or class
         val methodAnnotation = handler.method.getAnnotation(RateLimit::class.java)
         val classAnnotation = handler.beanType.getAnnotation(RateLimit::class.java)
 
-        // Skip if no rate limiting is configured
         if (methodAnnotation == null && classAnnotation == null) {
             return true
         }
 
-        // Get values from annotation
         val annotationLimit = methodAnnotation?.value ?: classAnnotation.value
         val annotationWindow = methodAnnotation?.windowSeconds ?: classAnnotation.windowSeconds
 
-        // Use default values if values in annotation are not positive
         val limit = if (annotationLimit > 0) annotationLimit else defaultLimit
         val windowSeconds = if (annotationWindow > 0) annotationWindow else defaultWindowSeconds
 

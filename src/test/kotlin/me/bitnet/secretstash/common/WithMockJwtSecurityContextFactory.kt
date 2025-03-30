@@ -1,4 +1,4 @@
-package me.bitnet.secretstash.util
+package me.bitnet.secretstash.common
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContext

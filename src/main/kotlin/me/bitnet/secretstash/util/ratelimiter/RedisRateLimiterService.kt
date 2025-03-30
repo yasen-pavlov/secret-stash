@@ -1,4 +1,4 @@
-package me.bitnet.secretstash.ratelimiter
+package me.bitnet.secretstash.util.ratelimiter
 
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service

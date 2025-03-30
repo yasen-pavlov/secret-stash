@@ -6,7 +6,7 @@ import me.bitnet.secretstash.note.dto.NoteRequest
 import me.bitnet.secretstash.note.exception.NoteNotFoundException
 import me.bitnet.secretstash.note.infrastructure.NoteHistoryRepository
 import me.bitnet.secretstash.note.infrastructure.NoteRepository
-import me.bitnet.secretstash.util.TokenService
+import me.bitnet.secretstash.util.auth.TokenService
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test

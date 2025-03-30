@@ -1,9 +1,9 @@
-package me.bitnet.secretstash.util
+package me.bitnet.secretstash.common
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import me.bitnet.secretstash.note.infrastructure.JpaNoteHistoryRepository
 import me.bitnet.secretstash.note.infrastructure.JpaNoteRepository
-import me.bitnet.secretstash.ratelimiter.RedisRateLimiterService
+import me.bitnet.secretstash.util.ratelimiter.RedisRateLimiterService
 import org.junit.jupiter.api.BeforeEach
 import org.quartz.Scheduler
 import org.springframework.beans.factory.annotation.Autowired

@@ -1,4 +1,4 @@
-package me.bitnet.secretstash.util
+package me.bitnet.secretstash.common
 
 import com.redis.testcontainers.RedisContainer
 import org.springframework.boot.test.context.TestConfiguration
